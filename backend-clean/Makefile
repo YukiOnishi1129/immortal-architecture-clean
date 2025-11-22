@@ -23,3 +23,7 @@ sqlc:
 oapi:
 	@test -f $(OPENAPI_SPEC) || (echo "OpenAPI spec not found at $(OPENAPI_SPEC). Run api-schema/scripts/generate-openapi.sh first."; exit 1)
 	$(OAPI_CODEGEN) --config $(OAPI_CONFIG) $(OPENAPI_SPEC)
+
+.PHONY: build
+build:
+	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) go build ./...

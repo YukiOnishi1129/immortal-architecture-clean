@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	httpcontroller "immortal-architecture-clean/backend/internal/adapter/http/controller"
 	openapi "immortal-architecture-clean/backend/internal/adapter/http/generated/openapi"
@@ -45,6 +46,19 @@ func BuildServer(ctx context.Context) (*echo.Echo, func(), error) {
 	noteInputFactory := factory.NewNoteInputFactory()
 
 	e := echo.New()
+
+	// Allow frontend (localhost:3000) to call the API during development.
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000", "http://127.0.0.1:3000"},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.PATCH, echo.OPTIONS},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+		},
+	}))
+
 	ac := httpcontroller.NewAccountController(accountInputFactory, accountOutputFactory, accountRepoFactory)
 	nc := httpcontroller.NewNoteController(noteInputFactory, noteOutputFactory, noteRepoFactory, templateRepoFactory, txFactory)
 	tc := httpcontroller.NewTemplateController(templateInputFactory, templateOutputFactory, templateRepoFactory, txFactory)

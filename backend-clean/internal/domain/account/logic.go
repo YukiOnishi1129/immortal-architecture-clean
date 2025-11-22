@@ -19,9 +19,6 @@ func Validate(a Account) error {
 	if strings.TrimSpace(a.FirstName) == "" && strings.TrimSpace(a.LastName) == "" {
 		return ErrInvalidName
 	}
-	if strings.TrimSpace(a.ID) == "" {
-		return domainerr.ErrOwnerRequired
-	}
 	if strings.TrimSpace(a.Provider) == "" {
 		return domainerr.ErrProviderRequired
 	}
