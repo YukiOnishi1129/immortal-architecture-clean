@@ -53,7 +53,7 @@ func (r *AccountRepository) GetByID(ctx context.Context, id string) (*account.Ac
 	if err != nil {
 		return nil, err
 	}
-	return toDomainAccount(&row), nil
+	return toDomainAccount(row), nil
 }
 
 func toDomainAccount(a *sqldb.Account) *account.Account {

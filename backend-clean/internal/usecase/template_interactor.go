@@ -9,31 +9,40 @@ import (
 )
 
 type TemplateInteractor struct {
-	repo port.TemplateRepository
-	tx   port.TxManager
+	repo   port.TemplateRepository
+	tx     port.TxManager
+	output port.TemplateOutputPort
 }
 
 var _ port.TemplateInputPort = (*TemplateInteractor)(nil)
 
-func NewTemplateInteractor(repo port.TemplateRepository, tx port.TxManager) *TemplateInteractor {
-	return &TemplateInteractor{repo: repo, tx: tx}
+func NewTemplateInteractor(repo port.TemplateRepository, tx port.TxManager, output port.TemplateOutputPort) *TemplateInteractor {
+	return &TemplateInteractor{repo: repo, tx: tx, output: output}
 }
 
-func (u *TemplateInteractor) List(ctx context.Context, filters template.Filters) ([]template.WithUsage, error) {
-	return u.repo.List(ctx, filters)
+func (u *TemplateInteractor) List(ctx context.Context, filters template.Filters) error {
+	templates, err := u.repo.List(ctx, filters)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentTemplateList(ctx, templates)
 }
 
-func (u *TemplateInteractor) Get(ctx context.Context, id string) (*template.WithUsage, error) {
-	return u.repo.Get(ctx, id)
+func (u *TemplateInteractor) Get(ctx context.Context, id string) error {
+	tpl, err := u.repo.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentTemplate(ctx, tpl)
 }
 
-func (u *TemplateInteractor) Create(ctx context.Context, input port.TemplateCreateInput) (*template.WithUsage, error) {
+func (u *TemplateInteractor) Create(ctx context.Context, input port.TemplateCreateInput) error {
 	if err := template.ValidateTemplate(template.Template{
 		Name:    input.Name,
 		OwnerID: input.OwnerID,
 		Fields:  input.Fields,
 	}); err != nil {
-		return nil, err
+		return err
 	}
 
 	var createdID string
@@ -54,23 +63,34 @@ func (u *TemplateInteractor) Create(ctx context.Context, input port.TemplateCrea
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return u.repo.Get(ctx, createdID)
+	tpl, err := u.repo.Get(ctx, createdID)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentTemplate(ctx, tpl)
 }
 
-func (u *TemplateInteractor) Update(ctx context.Context, input port.TemplateUpdateInput) (*template.WithUsage, error) {
+func (u *TemplateInteractor) Update(ctx context.Context, input port.TemplateUpdateInput) error {
+	current, err := u.repo.Get(ctx, input.ID)
+	if err != nil {
+		return err
+	}
+	if err := current.Template.EnsureOwner(input.OwnerID); err != nil {
+		return err
+	}
 	if input.Fields != nil {
 		if err := template.ValidateTemplate(template.Template{
 			ID:      input.ID,
 			Name:    input.Name,
 			Fields:  input.Fields,
-			OwnerID: "",
+			OwnerID: input.OwnerID,
 		}); err != nil {
-			return nil, err
+			return err
 		}
 	}
-	err := u.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
+	err = u.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
 		_, err := u.repo.Update(txCtx, template.Template{
 			ID:   input.ID,
 			Name: input.Name,
@@ -89,18 +109,28 @@ func (u *TemplateInteractor) Update(ctx context.Context, input port.TemplateUpda
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return u.repo.Get(ctx, input.ID)
+	tpl, err := u.repo.Get(ctx, input.ID)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentTemplate(ctx, tpl)
 }
 
-func (u *TemplateInteractor) Delete(ctx context.Context, id string) error {
+func (u *TemplateInteractor) Delete(ctx context.Context, id, ownerID string) error {
 	tpl, err := u.repo.Get(ctx, id)
 	if err != nil {
 		return err
 	}
-	if tpl.IsUsed {
-		return errors.ErrTemplateInUse
+	if err := tpl.Template.EnsureOwner(ownerID); err != nil {
+		return err
 	}
-	return u.repo.Delete(ctx, id)
+	if tpl.IsUsed {
+		return domainerr.ErrTemplateInUse
+	}
+	if err := u.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+	return u.output.PresentTemplateDeleted(ctx)
 }

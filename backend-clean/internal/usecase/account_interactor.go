@@ -8,19 +8,20 @@ import (
 )
 
 type AccountInteractor struct {
-	repo port.AccountRepository
+	repo   port.AccountRepository
+	output port.AccountOutputPort
 }
 
 var _ port.AccountInputPort = (*AccountInteractor)(nil)
 
-func NewAccountInteractor(repo port.AccountRepository) *AccountInteractor {
-	return &AccountInteractor{repo: repo}
+func NewAccountInteractor(repo port.AccountRepository, output port.AccountOutputPort) *AccountInteractor {
+	return &AccountInteractor{repo: repo, output: output}
 }
 
-func (u *AccountInteractor) CreateOrGet(ctx context.Context, input account.OAuthAccountInput) (*account.Account, error) {
+func (u *AccountInteractor) CreateOrGet(ctx context.Context, input account.OAuthAccountInput) error {
 	email, err := account.ParseEmail(input.Email)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	acc := account.Account{
 		Email:             email,
@@ -31,13 +32,21 @@ func (u *AccountInteractor) CreateOrGet(ctx context.Context, input account.OAuth
 		Thumbnail:         valueOrEmpty(input.Thumbnail),
 	}
 	if err := account.Validate(acc); err != nil {
-		return nil, err
+		return err
 	}
-	return u.repo.UpsertOAuthAccount(ctx, input)
+	a, err := u.repo.UpsertOAuthAccount(ctx, input)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentAccount(ctx, a)
 }
 
-func (u *AccountInteractor) GetByID(ctx context.Context, id string) (*account.Account, error) {
-	return u.repo.GetByID(ctx, id)
+func (u *AccountInteractor) GetByID(ctx context.Context, id string) error {
+	a, err := u.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentAccount(ctx, a)
 }
 
 func valueOrEmpty(s *string) string {

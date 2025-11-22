@@ -7,11 +7,11 @@ import (
 )
 
 type TemplateInputPort interface {
-	List(ctx context.Context, filters template.Filters) ([]template.WithUsage, error)
-	Get(ctx context.Context, id string) (*template.WithUsage, error)
-	Create(ctx context.Context, input TemplateCreateInput) (*template.WithUsage, error)
-	Update(ctx context.Context, input TemplateUpdateInput) (*template.WithUsage, error)
-	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, filters template.Filters) error
+	Get(ctx context.Context, id string) error
+	Create(ctx context.Context, input TemplateCreateInput) error
+	Update(ctx context.Context, input TemplateUpdateInput) error
+	Delete(ctx context.Context, id, ownerID string) error
 }
 
 type TemplateOutputPort interface {
@@ -36,7 +36,8 @@ type TemplateCreateInput struct {
 }
 
 type TemplateUpdateInput struct {
-	ID     string
-	Name   string
-	Fields []template.Field
+	ID      string
+	Name    string
+	Fields  []template.Field
+	OwnerID string
 }

@@ -2,20 +2,36 @@ package controller
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 
 	openapi "immortal-architecture-clean/backend/internal/adapter/http/generated/openapi"
+	"immortal-architecture-clean/backend/internal/adapter/http/presenter"
+	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/domain/template"
 	"immortal-architecture-clean/backend/internal/port"
 )
 
 type TemplateController struct {
-	input port.TemplateInputPort
+	inputFactory  func(repo port.TemplateRepository, tx port.TxManager, output port.TemplateOutputPort) port.TemplateInputPort
+	outputFactory func() *presenter.TemplatePresenter
+	repoFactory   func() port.TemplateRepository
+	txFactory     func() port.TxManager
 }
 
-func NewTemplateController(input port.TemplateInputPort) *TemplateController {
-	return &TemplateController{input: input}
+func NewTemplateController(
+	inputFactory func(repo port.TemplateRepository, tx port.TxManager, output port.TemplateOutputPort) port.TemplateInputPort,
+	outputFactory func() *presenter.TemplatePresenter,
+	repoFactory func() port.TemplateRepository,
+	txFactory func() port.TxManager,
+) *TemplateController {
+	return &TemplateController{
+		inputFactory:  inputFactory,
+		outputFactory: outputFactory,
+		repoFactory:   repoFactory,
+		txFactory:     txFactory,
+	}
 }
 
 func (c *TemplateController) List(ctx echo.Context, params openapi.TemplatesListTemplatesParams) error {
@@ -23,15 +39,11 @@ func (c *TemplateController) List(ctx echo.Context, params openapi.TemplatesList
 		Query:   params.Q,
 		OwnerID: params.OwnerId,
 	}
-	templates, err := c.input.List(ctx.Request().Context(), filters)
-	if err != nil {
+	input, p := c.newIO()
+	if err := input.List(ctx.Request().Context(), filters); err != nil {
 		return handleError(ctx, err)
 	}
-	resp := make([]openapi.ModelsTemplateResponse, 0, len(templates))
-	for _, t := range templates {
-		resp = append(resp, toTemplateResponse(t))
-	}
-	return ctx.JSON(http.StatusOK, resp)
+	return ctx.JSON(http.StatusOK, p.Templates())
 }
 
 func (c *TemplateController) Create(ctx echo.Context) error {
@@ -39,6 +51,7 @@ func (c *TemplateController) Create(ctx echo.Context) error {
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.JSON(http.StatusBadRequest, openapi.ModelsBadRequestError{Code: openapi.ModelsBadRequestErrorCodeBADREQUEST, Message: "invalid body"})
 	}
+	ownerID := body.OwnerId.String()
 	fields := make([]template.Field, 0, len(body.Fields))
 	for _, f := range body.Fields {
 		fields = append(fields, template.Field{
@@ -47,36 +60,46 @@ func (c *TemplateController) Create(ctx echo.Context) error {
 			IsRequired: f.IsRequired,
 		})
 	}
-	tpl, err := c.input.Create(ctx.Request().Context(), port.TemplateCreateInput{
+	input, p := c.newIO()
+	err := input.Create(ctx.Request().Context(), port.TemplateCreateInput{
 		Name:    body.Name,
-		OwnerID: body.OwnerId.String(),
+		OwnerID: ownerID,
 		Fields:  fields,
 	})
 	if err != nil {
 		return handleError(ctx, err)
 	}
-	return ctx.JSON(http.StatusOK, toTemplateResponse(*tpl))
+	return ctx.JSON(http.StatusOK, p.Template())
 }
 
 func (c *TemplateController) Delete(ctx echo.Context, templateID string) error {
-	if err := c.input.Delete(ctx.Request().Context(), templateID); err != nil {
+	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
+	if ownerID == "" {
+		return handleError(ctx, domainerr.ErrUnauthorized)
+	}
+	input, p := c.newIO()
+	if err := input.Delete(ctx.Request().Context(), templateID, ownerID); err != nil {
 		return handleError(ctx, err)
 	}
-	return ctx.JSON(http.StatusOK, openapi.ModelsSuccessResponse{Success: true})
+	return ctx.JSON(http.StatusOK, p.DeleteResponse())
 }
 
 func (c *TemplateController) GetByID(ctx echo.Context, templateID string) error {
-	tpl, err := c.input.Get(ctx.Request().Context(), templateID)
-	if err != nil {
+	input, p := c.newIO()
+	if err := input.Get(ctx.Request().Context(), templateID); err != nil {
 		return handleError(ctx, err)
 	}
-	return ctx.JSON(http.StatusOK, toTemplateResponse(*tpl))
+	return ctx.JSON(http.StatusOK, p.Template())
 }
 
 func (c *TemplateController) Update(ctx echo.Context, templateID string) error {
 	var body openapi.ModelsUpdateTemplateRequest
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.JSON(http.StatusBadRequest, openapi.ModelsBadRequestError{Code: openapi.ModelsBadRequestErrorCodeBADREQUEST, Message: "invalid body"})
+	}
+	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
+	if ownerID == "" {
+		return handleError(ctx, domainerr.ErrUnauthorized)
 	}
 	fields := make([]template.Field, 0, len(body.Fields))
 	for _, f := range body.Fields {
@@ -87,13 +110,21 @@ func (c *TemplateController) Update(ctx echo.Context, templateID string) error {
 			IsRequired: f.IsRequired,
 		})
 	}
-	tpl, err := c.input.Update(ctx.Request().Context(), port.TemplateUpdateInput{
-		ID:     templateID,
-		Name:   body.Name,
-		Fields: fields,
+	input, p := c.newIO()
+	err := input.Update(ctx.Request().Context(), port.TemplateUpdateInput{
+		ID:      templateID,
+		Name:    body.Name,
+		Fields:  fields,
+		OwnerID: ownerID,
 	})
 	if err != nil {
 		return handleError(ctx, err)
 	}
-	return ctx.JSON(http.StatusOK, toTemplateResponse(*tpl))
+	return ctx.JSON(http.StatusOK, p.Template())
+}
+
+func (c *TemplateController) newIO() (port.TemplateInputPort, *presenter.TemplatePresenter) {
+	output := c.outputFactory()
+	input := c.inputFactory(c.repoFactory(), c.txFactory(), output)
+	return input, output
 }

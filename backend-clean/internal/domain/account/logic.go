@@ -1,6 +1,7 @@
 package account
 
 import (
+	"errors"
 	"strings"
 
 	domainerr "immortal-architecture-clean/backend/internal/domain/errors"

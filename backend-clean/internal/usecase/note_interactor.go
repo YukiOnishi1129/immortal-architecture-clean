@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/domain/note"
 	"immortal-architecture-clean/backend/internal/domain/service"
 	"immortal-architecture-clean/backend/internal/domain/template"
@@ -14,35 +15,45 @@ type NoteInteractor struct {
 	notes     port.NoteRepository
 	templates port.TemplateRepository
 	tx        port.TxManager
+	output    port.NoteOutputPort
 }
 
 var _ port.NoteInputPort = (*NoteInteractor)(nil)
 
-func NewNoteInteractor(notes port.NoteRepository, templates port.TemplateRepository, tx port.TxManager) *NoteInteractor {
+func NewNoteInteractor(notes port.NoteRepository, templates port.TemplateRepository, tx port.TxManager, output port.NoteOutputPort) *NoteInteractor {
 	return &NoteInteractor{
 		notes:     notes,
 		templates: templates,
 		tx:        tx,
+		output:    output,
 	}
 }
 
-func (u *NoteInteractor) List(ctx context.Context, filters note.Filters) ([]note.WithMeta, error) {
-	return u.notes.List(ctx, filters)
+func (u *NoteInteractor) List(ctx context.Context, filters note.Filters) error {
+	notes, err := u.notes.List(ctx, filters)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentNoteList(ctx, notes)
 }
 
-func (u *NoteInteractor) Get(ctx context.Context, id string) (*note.WithMeta, error) {
-	return u.notes.Get(ctx, id)
+func (u *NoteInteractor) Get(ctx context.Context, id string) error {
+	n, err := u.notes.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentNote(ctx, n)
 }
 
-func (u *NoteInteractor) Create(ctx context.Context, input port.NoteCreateInput) (*note.WithMeta, error) {
+func (u *NoteInteractor) Create(ctx context.Context, input port.NoteCreateInput) error {
 	tpl, err := u.templates.Get(ctx, input.TemplateID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	sections := buildSections("", tpl.Template.Fields, input.Sections)
 	if err := note.ValidateNoteForCreate(input.Title, tpl.Template, sections); err != nil {
-		return nil, err
+		return err
 	}
 
 	var noteID string
@@ -63,21 +74,25 @@ func (u *NoteInteractor) Create(ctx context.Context, input port.NoteCreateInput)
 		return u.notes.ReplaceSections(txCtx, noteID, sectionsWithID)
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return u.notes.Get(ctx, noteID)
+	n, err := u.notes.Get(ctx, noteID)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentNote(ctx, n)
 }
 
-func (u *NoteInteractor) Update(ctx context.Context, input port.NoteUpdateInput) (*note.WithMeta, error) {
+func (u *NoteInteractor) Update(ctx context.Context, input port.NoteUpdateInput) error {
 	current, err := u.notes.Get(ctx, input.ID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err := note.ValidateNoteOwnership(current.Note.OwnerID, input.OwnerID); err != nil {
-		return nil, err
+		return err
 	}
 	if strings.TrimSpace(input.Title) == "" {
-		return nil, note.ErrTitleRequired
+		return domainerr.ErrTitleRequired
 	}
 
 	err = u.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
@@ -93,7 +108,10 @@ func (u *NoteInteractor) Update(ctx context.Context, input port.NoteUpdateInput)
 			if err != nil {
 				return err
 			}
-			sections := buildSections(current.Note.ID, tpl.Template.Fields, input.Sections)
+			sections, err := buildSectionsForUpdate(current.Sections, tpl.Template.Fields, input.Sections, current.Note.ID)
+			if err != nil {
+				return err
+			}
 			if err := note.ValidateSections(tpl.Template.Fields, sections); err != nil {
 				return err
 			}
@@ -104,40 +122,48 @@ func (u *NoteInteractor) Update(ctx context.Context, input port.NoteUpdateInput)
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return u.notes.Get(ctx, input.ID)
+	n, err := u.notes.Get(ctx, input.ID)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentNote(ctx, n)
 }
 
-func (u *NoteInteractor) ChangeStatus(ctx context.Context, input port.NoteStatusChangeInput) (*note.WithMeta, error) {
+func (u *NoteInteractor) ChangeStatus(ctx context.Context, input port.NoteStatusChangeInput) error {
 	current, err := u.notes.Get(ctx, input.ID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err := note.ValidateNoteOwnership(current.Note.OwnerID, input.OwnerID); err != nil {
-		return nil, err
+		return err
 	}
 	if err := input.Status.Validate(); err != nil {
-		return nil, err
+		return err
 	}
 	// domain service handles owner check + transition rule
 	if input.Status == note.StatusPublish {
 		if err := service.CanPublish(current.Note, input.OwnerID); err != nil {
-			return nil, err
+			return err
 		}
 	} else {
 		if err := service.CanUnpublish(current.Note, input.OwnerID); err != nil {
-			return nil, err
+			return err
 		}
 	}
 	if err := note.CanChangeStatus(current.Note.Status, input.Status); err != nil {
-		return nil, err
+		return err
 	}
 
 	if _, err := u.notes.UpdateStatus(ctx, input.ID, input.Status); err != nil {
-		return nil, err
+		return err
 	}
-	return u.notes.Get(ctx, input.ID)
+	n, err := u.notes.Get(ctx, input.ID)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentNote(ctx, n)
 }
 
 func (u *NoteInteractor) Delete(ctx context.Context, id, ownerID string) error {
@@ -148,7 +174,10 @@ func (u *NoteInteractor) Delete(ctx context.Context, id, ownerID string) error {
 	if err := note.ValidateNoteOwnership(current.Note.OwnerID, ownerID); err != nil {
 		return err
 	}
-	return u.notes.Delete(ctx, id)
+	if err := u.notes.Delete(ctx, id); err != nil {
+		return err
+	}
+	return u.output.PresentNoteDeleted(ctx)
 }
 
 func buildSections(noteID string, templateFields []template.Field, inputs []port.SectionInput) []note.Section {
@@ -169,4 +198,25 @@ func buildSections(noteID string, templateFields []template.Field, inputs []port
 		})
 	}
 	return sections
+}
+
+// buildSectionsForUpdate maps update inputs to sections using existing sections' field IDs.
+func buildSectionsForUpdate(existing []note.SectionWithField, templateFields []template.Field, inputs []port.SectionUpdateInput, noteID string) ([]note.Section, error) {
+	// map SectionID -> FieldID from existing
+	fieldBySection := make(map[string]string, len(existing))
+	for _, s := range existing {
+		fieldBySection[s.Section.ID] = s.Section.FieldID
+	}
+	converted := make([]port.SectionInput, 0, len(inputs))
+	for _, in := range inputs {
+		fieldID, ok := fieldBySection[in.SectionID]
+		if !ok {
+			return nil, domainerr.ErrSectionsMissing
+		}
+		converted = append(converted, port.SectionInput{
+			FieldID: fieldID,
+			Content: in.Content,
+		})
+	}
+	return buildSections(noteID, templateFields, converted), nil
 }

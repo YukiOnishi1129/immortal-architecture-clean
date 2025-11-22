@@ -23,7 +23,7 @@ func (s *Server) AccountsCreateOrGetAccount(ctx echo.Context) error {
 }
 
 func (s *Server) AccountsGetCurrentAccount(ctx echo.Context) error {
-	return ctx.JSON(501, map[string]string{"message": "not implemented"})
+	return s.account.GetCurrent(ctx)
 }
 
 func (s *Server) AccountsGetAccountById(ctx echo.Context, accountId string) error {

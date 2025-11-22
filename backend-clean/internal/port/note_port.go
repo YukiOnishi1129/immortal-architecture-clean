@@ -8,11 +8,11 @@ import (
 )
 
 type NoteInputPort interface {
-	List(ctx context.Context, filters note.Filters) ([]note.WithMeta, error)
-	Get(ctx context.Context, id string) (*note.WithMeta, error)
-	Create(ctx context.Context, input NoteCreateInput) (*note.WithMeta, error)
-	Update(ctx context.Context, input NoteUpdateInput) (*note.WithMeta, error)
-	ChangeStatus(ctx context.Context, input NoteStatusChangeInput) (*note.WithMeta, error)
+	List(ctx context.Context, filters note.Filters) error
+	Get(ctx context.Context, id string) error
+	Create(ctx context.Context, input NoteCreateInput) error
+	Update(ctx context.Context, input NoteUpdateInput) error
+	ChangeStatus(ctx context.Context, input NoteStatusChangeInput) error
 	Delete(ctx context.Context, id, ownerID string) error
 }
 

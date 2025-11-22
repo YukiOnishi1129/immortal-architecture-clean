@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	stderrors "errors"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -72,7 +72,7 @@ func (r *TemplateRepository) Get(ctx context.Context, id string) (*template.With
 	}
 	row, err := queriesForContext(ctx, r.queries).GetTemplateByID(ctx, pgID)
 	if err != nil {
-		if sterrors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domainerr.ErrNotFound
 		}
 		return nil, err
@@ -124,7 +124,7 @@ func (r *TemplateRepository) Update(ctx context.Context, tpl template.Template) 
 		Name: tpl.Name,
 	})
 	if err != nil {
-		if sterrors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domainerr.ErrNotFound
 		}
 		return nil, err
