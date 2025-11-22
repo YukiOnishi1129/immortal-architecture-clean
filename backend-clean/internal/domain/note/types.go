@@ -1,3 +1,4 @@
+// Package note holds note domain models.
 package note
 
 // Filters for listing notes.
@@ -8,6 +9,7 @@ type Filters struct {
 	Query      *string
 }
 
+// SectionWithField represents a section with template field metadata.
 type SectionWithField struct {
 	Section    Section
 	FieldLabel string
@@ -15,6 +17,7 @@ type SectionWithField struct {
 	IsRequired bool
 }
 
+// WithMeta represents a note with template metadata.
 type WithMeta struct {
 	Note          Note
 	TemplateName  string

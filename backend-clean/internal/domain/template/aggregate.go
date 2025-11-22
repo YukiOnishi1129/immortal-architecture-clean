@@ -1,3 +1,4 @@
+// Package template holds template domain models.
 package template
 
 import domainerr "immortal-architecture-clean/backend/internal/domain/errors"

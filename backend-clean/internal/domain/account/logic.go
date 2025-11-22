@@ -8,8 +8,10 @@ import (
 )
 
 var (
+	// ErrInvalidEmail indicates invalid email format.
 	ErrInvalidEmail = errors.New("invalid email")
-	ErrInvalidName  = errors.New("first or last name is required")
+	// ErrInvalidName indicates both first and last name are empty.
+	ErrInvalidName = errors.New("first or last name is required")
 )
 
 // Validate checks simple business rules for account.

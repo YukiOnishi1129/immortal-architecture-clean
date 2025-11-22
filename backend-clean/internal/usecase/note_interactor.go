@@ -1,3 +1,4 @@
+// Package usecase contains application use case implementations.
 package usecase
 
 import (
@@ -11,6 +12,7 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// NoteInteractor handles note use cases.
 type NoteInteractor struct {
 	notes     port.NoteRepository
 	templates port.TemplateRepository
@@ -20,6 +22,7 @@ type NoteInteractor struct {
 
 var _ port.NoteInputPort = (*NoteInteractor)(nil)
 
+// NewNoteInteractor creates NoteInteractor.
 func NewNoteInteractor(notes port.NoteRepository, templates port.TemplateRepository, tx port.TxManager, output port.NoteOutputPort) *NoteInteractor {
 	return &NoteInteractor{
 		notes:     notes,
@@ -29,6 +32,7 @@ func NewNoteInteractor(notes port.NoteRepository, templates port.TemplateReposit
 	}
 }
 
+// List returns notes by filters.
 func (u *NoteInteractor) List(ctx context.Context, filters note.Filters) error {
 	notes, err := u.notes.List(ctx, filters)
 	if err != nil {
@@ -37,6 +41,7 @@ func (u *NoteInteractor) List(ctx context.Context, filters note.Filters) error {
 	return u.output.PresentNoteList(ctx, notes)
 }
 
+// Get returns note by ID.
 func (u *NoteInteractor) Get(ctx context.Context, id string) error {
 	n, err := u.notes.Get(ctx, id)
 	if err != nil {
@@ -45,6 +50,7 @@ func (u *NoteInteractor) Get(ctx context.Context, id string) error {
 	return u.output.PresentNote(ctx, n)
 }
 
+// Create creates a note.
 func (u *NoteInteractor) Create(ctx context.Context, input port.NoteCreateInput) error {
 	tpl, err := u.templates.Get(ctx, input.TemplateID)
 	if err != nil {
@@ -83,6 +89,7 @@ func (u *NoteInteractor) Create(ctx context.Context, input port.NoteCreateInput)
 	return u.output.PresentNote(ctx, n)
 }
 
+// Update updates a note.
 func (u *NoteInteractor) Update(ctx context.Context, input port.NoteUpdateInput) error {
 	current, err := u.notes.Get(ctx, input.ID)
 	if err != nil {
@@ -131,6 +138,7 @@ func (u *NoteInteractor) Update(ctx context.Context, input port.NoteUpdateInput)
 	return u.output.PresentNote(ctx, n)
 }
 
+// ChangeStatus changes note status.
 func (u *NoteInteractor) ChangeStatus(ctx context.Context, input port.NoteStatusChangeInput) error {
 	current, err := u.notes.Get(ctx, input.ID)
 	if err != nil {
@@ -166,6 +174,7 @@ func (u *NoteInteractor) ChangeStatus(ctx context.Context, input port.NoteStatus
 	return u.output.PresentNote(ctx, n)
 }
 
+// Delete deletes a note.
 func (u *NoteInteractor) Delete(ctx context.Context, id, ownerID string) error {
 	current, err := u.notes.Get(ctx, id)
 	if err != nil {

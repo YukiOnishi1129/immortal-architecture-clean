@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Validate checks if status is valid.
 func (s NoteStatus) Validate() error {
 	if s != StatusDraft && s != StatusPublish {
 		return domainerr.ErrInvalidStatus
@@ -13,6 +14,8 @@ func (s NoteStatus) Validate() error {
 	return nil
 }
 
+// CanChangeStatus validates status transition.
+// CanChangeStatus validates status transition.
 func CanChangeStatus(from, to NoteStatus) error {
 	if from == StatusDraft && to == StatusPublish {
 		return nil

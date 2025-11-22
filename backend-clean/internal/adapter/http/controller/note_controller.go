@@ -1,3 +1,4 @@
+// Package controller contains HTTP controllers.
 package controller
 
 import (
@@ -13,6 +14,7 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// NoteController handles note HTTP endpoints.
 type NoteController struct {
 	inputFactory    func(noteRepo port.NoteRepository, tplRepo port.TemplateRepository, tx port.TxManager, output port.NoteOutputPort) port.NoteInputPort
 	outputFactory   func() *presenter.NotePresenter
@@ -21,6 +23,7 @@ type NoteController struct {
 	txFactory       func() port.TxManager
 }
 
+// NewNoteController creates NoteController.
 func NewNoteController(
 	inputFactory func(noteRepo port.NoteRepository, tplRepo port.TemplateRepository, tx port.TxManager, output port.NoteOutputPort) port.NoteInputPort,
 	outputFactory func() *presenter.NotePresenter,
@@ -37,6 +40,8 @@ func NewNoteController(
 	}
 }
 
+// List handles listing notes with optional filters.
+// List handles GET /notes.
 func (c *NoteController) List(ctx echo.Context, params openapi.NotesListNotesParams) error {
 	var status *note.NoteStatus
 	if params.Status != nil {
@@ -56,6 +61,8 @@ func (c *NoteController) List(ctx echo.Context, params openapi.NotesListNotesPar
 	return ctx.JSON(http.StatusOK, p.Notes())
 }
 
+// Create handles creating a new note.
+// Create handles POST /notes.
 func (c *NoteController) Create(ctx echo.Context) error {
 	var body openapi.ModelsCreateNoteRequest
 	if err := ctx.Bind(&body); err != nil {
@@ -84,6 +91,8 @@ func (c *NoteController) Create(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, p.Note())
 }
 
+// Delete handles deleting a note.
+// Delete handles DELETE /notes/:id.
 func (c *NoteController) Delete(ctx echo.Context, noteID string) error {
 	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
 	if ownerID == "" {
@@ -96,6 +105,7 @@ func (c *NoteController) Delete(ctx echo.Context, noteID string) error {
 	return ctx.JSON(http.StatusOK, p.DeleteResponse())
 }
 
+// GetByID handles GET /notes/:id.
 func (c *NoteController) GetByID(ctx echo.Context, noteID string) error {
 	input, p := c.newIO()
 	if err := input.Get(ctx.Request().Context(), noteID); err != nil {
@@ -104,6 +114,8 @@ func (c *NoteController) GetByID(ctx echo.Context, noteID string) error {
 	return ctx.JSON(http.StatusOK, p.Note())
 }
 
+// Update handles updating a note.
+// Update handles PUT /notes/:id.
 func (c *NoteController) Update(ctx echo.Context, noteID string) error {
 	var body openapi.ModelsUpdateNoteRequest
 	if err := ctx.Bind(&body); err != nil {
@@ -133,6 +145,8 @@ func (c *NoteController) Update(ctx echo.Context, noteID string) error {
 	return ctx.JSON(http.StatusOK, p.Note())
 }
 
+// Publish handles publishing a note.
+// Publish handles POST /notes/:id/publish.
 func (c *NoteController) Publish(ctx echo.Context, noteID string) error {
 	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
 	if ownerID == "" {
@@ -150,6 +164,8 @@ func (c *NoteController) Publish(ctx echo.Context, noteID string) error {
 	return ctx.JSON(http.StatusOK, p.Note())
 }
 
+// Unpublish handles unpublishing a note.
+// Unpublish handles POST /notes/:id/unpublish.
 func (c *NoteController) Unpublish(ctx echo.Context, noteID string) error {
 	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
 	if ownerID == "" {

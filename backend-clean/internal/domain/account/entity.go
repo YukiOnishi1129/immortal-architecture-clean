@@ -1,7 +1,9 @@
+// Package account holds account domain models.
 package account
 
 import "time"
 
+// Account is the aggregate root representing a user.
 type Account struct {
 	ID                string
 	Email             Email

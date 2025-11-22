@@ -1,3 +1,4 @@
+// Package db implements gateway repositories.
 package db
 
 import (
@@ -11,6 +12,7 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// AccountRepository implements account persistence.
 type AccountRepository struct {
 	pool    *pgxpool.Pool
 	queries *sqldb.Queries
@@ -18,6 +20,7 @@ type AccountRepository struct {
 
 var _ port.AccountRepository = (*AccountRepository)(nil)
 
+// NewAccountRepository creates AccountRepository.
 func NewAccountRepository(pool *pgxpool.Pool) *AccountRepository {
 	return &AccountRepository{
 		pool:    pool,
@@ -25,6 +28,7 @@ func NewAccountRepository(pool *pgxpool.Pool) *AccountRepository {
 	}
 }
 
+// UpsertOAuthAccount inserts or updates an OAuth account.
 func (r *AccountRepository) UpsertOAuthAccount(ctx context.Context, input account.OAuthAccountInput) (*account.Account, error) {
 	q := queriesForContext(ctx, r.queries)
 
@@ -40,9 +44,10 @@ func (r *AccountRepository) UpsertOAuthAccount(ctx context.Context, input accoun
 	if err != nil {
 		return nil, err
 	}
-	return toDomainAccount(row), nil
+	return toDomainAccount(row)
 }
 
+// GetByID fetches account by ID.
 func (r *AccountRepository) GetByID(ctx context.Context, id string) (*account.Account, error) {
 	q := queriesForContext(ctx, r.queries)
 	uuid, err := toUUID(id)
@@ -53,16 +58,19 @@ func (r *AccountRepository) GetByID(ctx context.Context, id string) (*account.Ac
 	if err != nil {
 		return nil, err
 	}
-	return toDomainAccount(row), nil
+	return toDomainAccount(row)
 }
 
-func toDomainAccount(a *sqldb.Account) *account.Account {
+func toDomainAccount(a *sqldb.Account) (*account.Account, error) {
 	var lastLogin *time.Time
 	if a.LastLoginAt.Valid {
 		t := timestamptzToTime(a.LastLoginAt)
 		lastLogin = &t
 	}
-	email, _ := account.ParseEmail(a.Email)
+	email, err := account.ParseEmail(a.Email)
+	if err != nil {
+		return nil, err
+	}
 	return &account.Account{
 		ID:                uuidToString(a.ID),
 		Email:             email,
@@ -75,5 +83,5 @@ func toDomainAccount(a *sqldb.Account) *account.Account {
 		LastLoginAt:       lastLogin,
 		CreatedAt:         timestamptzToTime(a.CreatedAt),
 		UpdatedAt:         timestamptzToTime(a.UpdatedAt),
-	}
+	}, nil
 }

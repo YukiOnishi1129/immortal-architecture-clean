@@ -1,3 +1,4 @@
+// Package presenter contains HTTP presenters that implement output ports.
 package presenter
 
 import (
@@ -8,6 +9,8 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// TemplatePresenter converts template domain models to OpenAPI responses.
+// TemplatePresenter converts template domain models to OpenAPI responses.
 type TemplatePresenter struct {
 	template *openapi.ModelsTemplateResponse
 	list     []openapi.ModelsTemplateResponse
@@ -16,11 +19,13 @@ type TemplatePresenter struct {
 
 var _ port.TemplateOutputPort = (*TemplatePresenter)(nil)
 
+// NewTemplatePresenter creates a TemplatePresenter.
 func NewTemplatePresenter() *TemplatePresenter {
 	return &TemplatePresenter{}
 }
 
-func (p *TemplatePresenter) PresentTemplateList(ctx context.Context, templates []template.WithUsage) error {
+// PresentTemplateList stores template list response.
+func (p *TemplatePresenter) PresentTemplateList(_ context.Context, templates []template.WithUsage) error {
 	res := make([]openapi.ModelsTemplateResponse, 0, len(templates))
 	for _, t := range templates {
 		res = append(res, toTemplateResponse(t))
@@ -29,25 +34,30 @@ func (p *TemplatePresenter) PresentTemplateList(ctx context.Context, templates [
 	return nil
 }
 
-func (p *TemplatePresenter) PresentTemplate(ctx context.Context, tpl *template.WithUsage) error {
+// PresentTemplate stores single template response.
+func (p *TemplatePresenter) PresentTemplate(_ context.Context, tpl *template.WithUsage) error {
 	resp := toTemplateResponse(*tpl)
 	p.template = &resp
 	return nil
 }
 
-func (p *TemplatePresenter) PresentTemplateDeleted(ctx context.Context) error {
+// PresentTemplateDeleted marks delete success.
+func (p *TemplatePresenter) PresentTemplateDeleted(_ context.Context) error {
 	p.deleted = true
 	return nil
 }
 
+// Template returns the last template response.
 func (p *TemplatePresenter) Template() *openapi.ModelsTemplateResponse {
 	return p.template
 }
 
+// Templates returns the template list response.
 func (p *TemplatePresenter) Templates() []openapi.ModelsTemplateResponse {
 	return p.list
 }
 
+// DeleteResponse returns deletion success response.
 func (p *TemplatePresenter) DeleteResponse() openapi.ModelsSuccessResponse {
 	return openapi.ModelsSuccessResponse{Success: p.deleted}
 }
@@ -58,7 +68,7 @@ func toTemplateResponse(t template.WithUsage) openapi.ModelsTemplateResponse {
 		fields = append(fields, openapi.ModelsField{
 			Id:         f.ID,
 			Label:      f.Label,
-			Order:      int32(f.Order),
+			Order:      int32(f.Order), //nolint:gosec
 			IsRequired: f.IsRequired,
 		})
 	}

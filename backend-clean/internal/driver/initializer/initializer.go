@@ -1,3 +1,4 @@
+// Package initializer wires dependencies for the API server.
 package initializer
 
 import (

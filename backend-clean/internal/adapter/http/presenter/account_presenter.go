@@ -1,3 +1,4 @@
+// Package presenter contains HTTP presenters that implement output ports.
 package presenter
 
 import (
@@ -10,17 +11,20 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// AccountPresenter converts domain account to OpenAPI response.
 type AccountPresenter struct {
 	account *openapi.ModelsAccountResponse
 }
 
 var _ port.AccountOutputPort = (*AccountPresenter)(nil)
 
+// NewAccountPresenter creates a new AccountPresenter.
 func NewAccountPresenter() *AccountPresenter {
 	return &AccountPresenter{}
 }
 
-func (p *AccountPresenter) PresentAccount(ctx context.Context, a *account.Account) error {
+// PresentAccount stores converted account response.
+func (p *AccountPresenter) PresentAccount(_ context.Context, a *account.Account) error {
 	var lastLogin time.Time
 	if a.LastLoginAt != nil {
 		lastLogin = *a.LastLoginAt
@@ -39,6 +43,7 @@ func (p *AccountPresenter) PresentAccount(ctx context.Context, a *account.Accoun
 	return nil
 }
 
+// Response returns the last account response.
 func (p *AccountPresenter) Response() *openapi.ModelsAccountResponse {
 	return p.account
 }

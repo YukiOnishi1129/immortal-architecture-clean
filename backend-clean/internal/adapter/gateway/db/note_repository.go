@@ -1,3 +1,4 @@
+// Package db implements gateway repositories.
 package db
 
 import (
@@ -14,6 +15,7 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// NoteRepository implements note persistence.
 type NoteRepository struct {
 	pool    *pgxpool.Pool
 	queries *sqldb.Queries
@@ -21,6 +23,7 @@ type NoteRepository struct {
 
 var _ port.NoteRepository = (*NoteRepository)(nil)
 
+// NewNoteRepository creates NoteRepository.
 func NewNoteRepository(pool *pgxpool.Pool) *NoteRepository {
 	return &NoteRepository{
 		pool:    pool,
@@ -28,6 +31,7 @@ func NewNoteRepository(pool *pgxpool.Pool) *NoteRepository {
 	}
 }
 
+// List returns notes by filters.
 func (r *NoteRepository) List(ctx context.Context, filters note.Filters) ([]note.WithMeta, error) {
 	params := &sqldb.ListNotesParams{}
 	if filters.Status != nil {
@@ -76,6 +80,7 @@ func (r *NoteRepository) List(ctx context.Context, filters note.Filters) ([]note
 	return result, nil
 }
 
+// Get returns a note with sections.
 func (r *NoteRepository) Get(ctx context.Context, id string) (*note.WithMeta, error) {
 	pgID, err := toUUID(id)
 	if err != nil {
@@ -108,6 +113,7 @@ func (r *NoteRepository) Get(ctx context.Context, id string) (*note.WithMeta, er
 	}, nil
 }
 
+// Create inserts a note.
 func (r *NoteRepository) Create(ctx context.Context, n note.Note) (*note.Note, error) {
 	templateID, err := toUUID(n.TemplateID)
 	if err != nil {
@@ -137,6 +143,7 @@ func (r *NoteRepository) Create(ctx context.Context, n note.Note) (*note.Note, e
 	}, nil
 }
 
+// Update updates a note title.
 func (r *NoteRepository) Update(ctx context.Context, n note.Note) (*note.Note, error) {
 	pgID, err := toUUID(n.ID)
 	if err != nil {
@@ -163,6 +170,7 @@ func (r *NoteRepository) Update(ctx context.Context, n note.Note) (*note.Note, e
 	}, nil
 }
 
+// UpdateStatus updates note status.
 func (r *NoteRepository) UpdateStatus(ctx context.Context, id string, status note.NoteStatus) (*note.Note, error) {
 	pgID, err := toUUID(id)
 	if err != nil {
@@ -189,6 +197,7 @@ func (r *NoteRepository) UpdateStatus(ctx context.Context, id string, status not
 	}, nil
 }
 
+// Delete deletes a note.
 func (r *NoteRepository) Delete(ctx context.Context, id string) error {
 	pgID, err := toUUID(id)
 	if err != nil {
@@ -197,6 +206,7 @@ func (r *NoteRepository) Delete(ctx context.Context, id string) error {
 	return queriesForContext(ctx, r.queries).DeleteNote(ctx, pgID)
 }
 
+// ReplaceSections replaces note sections.
 func (r *NoteRepository) ReplaceSections(ctx context.Context, noteID string, sections []note.Section) error {
 	nID, err := toUUID(noteID)
 	if err != nil {

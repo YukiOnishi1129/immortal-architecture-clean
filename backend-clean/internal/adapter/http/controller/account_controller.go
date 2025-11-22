@@ -1,3 +1,4 @@
+// Package controller contains HTTP controllers.
 package controller
 
 import (
@@ -11,12 +12,14 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// AccountController handles account HTTP endpoints.
 type AccountController struct {
 	inputFactory  func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort
 	outputFactory func() *presenter.AccountPresenter
 	repoFactory   func() port.AccountRepository
 }
 
+// NewAccountController creates AccountController.
 func NewAccountController(
 	inputFactory func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort,
 	outputFactory func() *presenter.AccountPresenter,
@@ -29,6 +32,7 @@ func NewAccountController(
 	}
 }
 
+// CreateOrGet handles account upsert via OAuth.
 func (c *AccountController) CreateOrGet(ctx echo.Context) error {
 	var body openapi.ModelsCreateOrGetAccountRequest
 	if err := ctx.Bind(&body); err != nil {
@@ -49,6 +53,7 @@ func (c *AccountController) CreateOrGet(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, p.Response())
 }
 
+// GetByID handles GET /accounts/:id.
 func (c *AccountController) GetByID(ctx echo.Context, accountID string) error {
 	input, p := c.newIO()
 	err := input.GetByID(ctx.Request().Context(), accountID)
@@ -58,6 +63,7 @@ func (c *AccountController) GetByID(ctx echo.Context, accountID string) error {
 	return ctx.JSON(http.StatusOK, p.Response())
 }
 
+// GetCurrent handles GET /accounts/me.
 func (c *AccountController) GetCurrent(ctx echo.Context) error {
 	accountID, err := currentAccountID(ctx)
 	if err != nil {

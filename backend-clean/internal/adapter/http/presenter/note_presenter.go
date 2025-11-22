@@ -1,3 +1,4 @@
+// Package presenter contains HTTP presenters that implement output ports.
 package presenter
 
 import (
@@ -8,6 +9,7 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// NotePresenter converts note domain models to OpenAPI responses.
 type NotePresenter struct {
 	note      *openapi.ModelsNoteResponse
 	notes     []openapi.ModelsNoteResponse
@@ -16,11 +18,13 @@ type NotePresenter struct {
 
 var _ port.NoteOutputPort = (*NotePresenter)(nil)
 
+// NewNotePresenter creates a new NotePresenter.
 func NewNotePresenter() *NotePresenter {
 	return &NotePresenter{}
 }
 
-func (p *NotePresenter) PresentNoteList(ctx context.Context, notes []note.WithMeta) error {
+// PresentNoteList stores note list response.
+func (p *NotePresenter) PresentNoteList(_ context.Context, notes []note.WithMeta) error {
 	res := make([]openapi.ModelsNoteResponse, 0, len(notes))
 	for _, n := range notes {
 		res = append(res, toNoteResponse(n))
@@ -29,25 +33,30 @@ func (p *NotePresenter) PresentNoteList(ctx context.Context, notes []note.WithMe
 	return nil
 }
 
-func (p *NotePresenter) PresentNote(ctx context.Context, n *note.WithMeta) error {
+// PresentNote stores single note response.
+func (p *NotePresenter) PresentNote(_ context.Context, n *note.WithMeta) error {
 	resp := toNoteResponse(*n)
 	p.note = &resp
 	return nil
 }
 
-func (p *NotePresenter) PresentNoteDeleted(ctx context.Context) error {
+// PresentNoteDeleted marks delete success.
+func (p *NotePresenter) PresentNoteDeleted(_ context.Context) error {
 	p.deletedOK = true
 	return nil
 }
 
+// Note returns the last note response.
 func (p *NotePresenter) Note() *openapi.ModelsNoteResponse {
 	return p.note
 }
 
+// Notes returns the note list response.
 func (p *NotePresenter) Notes() []openapi.ModelsNoteResponse {
 	return p.notes
 }
 
+// DeleteResponse returns deletion success response.
 func (p *NotePresenter) DeleteResponse() openapi.ModelsSuccessResponse {
 	return openapi.ModelsSuccessResponse{Success: p.deletedOK}
 }

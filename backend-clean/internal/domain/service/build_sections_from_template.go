@@ -1,3 +1,5 @@
+// Package service contains domain services.
+// Package service contains domain services shared across aggregates.
 package service
 
 import (

@@ -13,67 +13,93 @@ type Server struct {
 	template *TemplateController
 }
 
+// NewServer wires controller dependencies to generated ServerInterface.
 func NewServer(ac *AccountController, nc *NoteController, tc *TemplateController) *Server {
 	return &Server{account: ac, note: nc, template: tc}
 }
 
-// OpenAPI generated interface methods
+// AccountsCreateOrGetAccount handles POST /api/accounts/auth.
+// AccountsCreateOrGetAccount handles POST /api/accounts/auth.
+// AccountsCreateOrGetAccount handles POST /api/accounts/auth.
 func (s *Server) AccountsCreateOrGetAccount(ctx echo.Context) error {
 	return s.account.CreateOrGet(ctx)
 }
 
+// AccountsGetCurrentAccount handles GET /api/accounts/me.
+// AccountsGetCurrentAccount handles GET /api/accounts/me.
 func (s *Server) AccountsGetCurrentAccount(ctx echo.Context) error {
 	return s.account.GetCurrent(ctx)
 }
 
-func (s *Server) AccountsGetAccountById(ctx echo.Context, accountId string) error {
+// AccountsGetAccountById handles GET /api/accounts/:id.
+func (s *Server) AccountsGetAccountById(ctx echo.Context, accountId string) error { //nolint:revive
 	return s.account.GetByID(ctx, accountId)
 }
 
+// NotesListNotes handles GET /api/notes.
+// NotesListNotes handles GET /api/notes.
 func (s *Server) NotesListNotes(ctx echo.Context, params openapi.NotesListNotesParams) error {
 	return s.note.List(ctx, params)
 }
 
+// NotesCreateNote handles POST /api/notes.
+// NotesCreateNote handles POST /api/notes.
 func (s *Server) NotesCreateNote(ctx echo.Context) error {
 	return s.note.Create(ctx)
 }
 
-func (s *Server) NotesDeleteNote(ctx echo.Context, noteId string) error {
+// NotesDeleteNote handles DELETE /api/notes/:id.
+func (s *Server) NotesDeleteNote(ctx echo.Context, noteId string) error { //nolint:revive
 	return s.note.Delete(ctx, noteId)
 }
 
-func (s *Server) NotesGetNoteById(ctx echo.Context, noteId string) error {
+// NotesGetNoteById handles GET /api/notes/:id.
+func (s *Server) NotesGetNoteById(ctx echo.Context, noteId string) error { //nolint:revive
 	return s.note.GetByID(ctx, noteId)
 }
 
-func (s *Server) NotesUpdateNote(ctx echo.Context, noteId string) error {
+// NotesUpdateNote handles PUT /api/notes/:noteId.
+// NotesUpdateNote handles PUT /api/notes/:id.
+func (s *Server) NotesUpdateNote(ctx echo.Context, noteId string) error { //nolint:revive
 	return s.note.Update(ctx, noteId)
 }
 
-func (s *Server) NotesPublishNote(ctx echo.Context, noteId string) error {
+// NotesPublishNote handles POST /api/notes/:noteId/publish.
+// NotesPublishNote handles POST /api/notes/:id/publish.
+func (s *Server) NotesPublishNote(ctx echo.Context, noteId string) error { //nolint:revive
 	return s.note.Publish(ctx, noteId)
 }
 
-func (s *Server) NotesUnpublishNote(ctx echo.Context, noteId string) error {
+// NotesUnpublishNote handles POST /api/notes/:noteId/unpublish.
+// NotesUnpublishNote handles POST /api/notes/:id/unpublish.
+func (s *Server) NotesUnpublishNote(ctx echo.Context, noteId string) error { //nolint:revive
 	return s.note.Unpublish(ctx, noteId)
 }
 
+// TemplatesListTemplates handles GET /api/templates.
+// TemplatesListTemplates handles GET /api/templates.
 func (s *Server) TemplatesListTemplates(ctx echo.Context, params openapi.TemplatesListTemplatesParams) error {
 	return s.template.List(ctx, params)
 }
 
+// TemplatesCreateTemplate handles POST /api/templates.
+// TemplatesCreateTemplate handles POST /api/templates.
 func (s *Server) TemplatesCreateTemplate(ctx echo.Context) error {
 	return s.template.Create(ctx)
 }
 
-func (s *Server) TemplatesDeleteTemplate(ctx echo.Context, templateId string) error {
+// TemplatesDeleteTemplate handles DELETE /api/templates/:id.
+func (s *Server) TemplatesDeleteTemplate(ctx echo.Context, templateId string) error { //nolint:revive
 	return s.template.Delete(ctx, templateId)
 }
 
-func (s *Server) TemplatesGetTemplateById(ctx echo.Context, templateId string) error {
+// TemplatesGetTemplateById handles GET /api/templates/:id.
+func (s *Server) TemplatesGetTemplateById(ctx echo.Context, templateId string) error { //nolint:revive
 	return s.template.GetByID(ctx, templateId)
 }
 
-func (s *Server) TemplatesUpdateTemplate(ctx echo.Context, templateId string) error {
+// TemplatesUpdateTemplate handles PUT /api/templates/:templateId.
+// TemplatesUpdateTemplate handles PUT /api/templates/:id.
+func (s *Server) TemplatesUpdateTemplate(ctx echo.Context, templateId string) error { //nolint:revive
 	return s.template.Update(ctx, templateId)
 }

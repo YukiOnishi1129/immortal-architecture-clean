@@ -1,3 +1,4 @@
+// Package port defines application ports (interfaces).
 package port
 
 import (
@@ -7,17 +8,20 @@ import (
 )
 
 // AccountInputPort defines entrypoints for account use cases.
+// AccountInputPort defines account use case input methods.
 type AccountInputPort interface {
 	CreateOrGet(ctx context.Context, input account.OAuthAccountInput) error
 	GetByID(ctx context.Context, id string) error
 }
 
-// AccountOutputPort converts account結果を外部向けに整形するための契約。
+// AccountOutputPort converts account results for external responses.
+// AccountOutputPort defines presenter for accounts.
 type AccountOutputPort interface {
 	PresentAccount(ctx context.Context, account *account.Account) error
 }
 
 // AccountRepository abstracts persistence for accounts.
+// AccountRepository abstracts account persistence.
 type AccountRepository interface {
 	UpsertOAuthAccount(ctx context.Context, input account.OAuthAccountInput) (*account.Account, error)
 	GetByID(ctx context.Context, id string) (*account.Account, error)

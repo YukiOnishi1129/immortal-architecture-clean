@@ -1,3 +1,4 @@
+// Package usecase contains application use case implementations.
 package usecase
 
 import (
@@ -8,6 +9,7 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// TemplateInteractor handles template use cases.
 type TemplateInteractor struct {
 	repo   port.TemplateRepository
 	tx     port.TxManager
@@ -16,10 +18,12 @@ type TemplateInteractor struct {
 
 var _ port.TemplateInputPort = (*TemplateInteractor)(nil)
 
+// NewTemplateInteractor creates TemplateInteractor.
 func NewTemplateInteractor(repo port.TemplateRepository, tx port.TxManager, output port.TemplateOutputPort) *TemplateInteractor {
 	return &TemplateInteractor{repo: repo, tx: tx, output: output}
 }
 
+// List returns templates by filters.
 func (u *TemplateInteractor) List(ctx context.Context, filters template.Filters) error {
 	templates, err := u.repo.List(ctx, filters)
 	if err != nil {
@@ -28,6 +32,7 @@ func (u *TemplateInteractor) List(ctx context.Context, filters template.Filters)
 	return u.output.PresentTemplateList(ctx, templates)
 }
 
+// Get returns template by ID.
 func (u *TemplateInteractor) Get(ctx context.Context, id string) error {
 	tpl, err := u.repo.Get(ctx, id)
 	if err != nil {
@@ -36,6 +41,7 @@ func (u *TemplateInteractor) Get(ctx context.Context, id string) error {
 	return u.output.PresentTemplate(ctx, tpl)
 }
 
+// Create creates a template.
 func (u *TemplateInteractor) Create(ctx context.Context, input port.TemplateCreateInput) error {
 	if err := template.ValidateTemplate(template.Template{
 		Name:    input.Name,
@@ -72,6 +78,7 @@ func (u *TemplateInteractor) Create(ctx context.Context, input port.TemplateCrea
 	return u.output.PresentTemplate(ctx, tpl)
 }
 
+// Update updates a template.
 func (u *TemplateInteractor) Update(ctx context.Context, input port.TemplateUpdateInput) error {
 	current, err := u.repo.Get(ctx, input.ID)
 	if err != nil {
@@ -118,6 +125,7 @@ func (u *TemplateInteractor) Update(ctx context.Context, input port.TemplateUpda
 	return u.output.PresentTemplate(ctx, tpl)
 }
 
+// Delete deletes a template.
 func (u *TemplateInteractor) Delete(ctx context.Context, id, ownerID string) error {
 	tpl, err := u.repo.Get(ctx, id)
 	if err != nil {

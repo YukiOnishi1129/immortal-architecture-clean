@@ -1,9 +1,11 @@
+// Package note holds note domain models.
 package note
 
 import domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 
 // Aggregate helper methods to enforce child through parent.
 
+// ReplaceSections updates sections via aggregate root.
 func (n *Note) ReplaceSections(sections []Section) error {
 	// Ensure sections belong to this note
 	for i := range sections {

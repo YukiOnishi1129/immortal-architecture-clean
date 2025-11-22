@@ -14,10 +14,12 @@ type TxManager struct {
 	pool *pgxpool.Pool
 }
 
+// NewTxManager creates a transaction manager backed by pgx pool.
 func NewTxManager(pool *pgxpool.Pool) *TxManager {
 	return &TxManager{pool: pool}
 }
 
+// WithinTransaction executes fn within a pgx transaction.
 func (m *TxManager) WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	tx, err := m.pool.Begin(ctx)
 	if err != nil {
@@ -26,7 +28,9 @@ func (m *TxManager) WithinTransaction(ctx context.Context, fn func(ctx context.C
 	txCtx := context.WithValue(ctx, txKey{}, tx)
 
 	if err := fn(txCtx); err != nil {
-		_ = tx.Rollback(ctx)
+		if rbErr := tx.Rollback(ctx); rbErr != nil {
+			return rbErr
+		}
 		return err
 	}
 	return tx.Commit(ctx)

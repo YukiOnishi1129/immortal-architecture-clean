@@ -1,3 +1,4 @@
+// Package controller contains HTTP controllers.
 package controller
 
 import (
@@ -13,6 +14,7 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+// TemplateController handles template HTTP endpoints.
 type TemplateController struct {
 	inputFactory  func(repo port.TemplateRepository, tx port.TxManager, output port.TemplateOutputPort) port.TemplateInputPort
 	outputFactory func() *presenter.TemplatePresenter
@@ -20,6 +22,7 @@ type TemplateController struct {
 	txFactory     func() port.TxManager
 }
 
+// NewTemplateController creates TemplateController.
 func NewTemplateController(
 	inputFactory func(repo port.TemplateRepository, tx port.TxManager, output port.TemplateOutputPort) port.TemplateInputPort,
 	outputFactory func() *presenter.TemplatePresenter,
@@ -34,6 +37,7 @@ func NewTemplateController(
 	}
 }
 
+// List handles GET /templates.
 func (c *TemplateController) List(ctx echo.Context, params openapi.TemplatesListTemplatesParams) error {
 	filters := template.Filters{
 		Query:   params.Q,
@@ -46,6 +50,7 @@ func (c *TemplateController) List(ctx echo.Context, params openapi.TemplatesList
 	return ctx.JSON(http.StatusOK, p.Templates())
 }
 
+// Create handles POST /templates.
 func (c *TemplateController) Create(ctx echo.Context) error {
 	var body openapi.ModelsCreateTemplateRequest
 	if err := ctx.Bind(&body); err != nil {
@@ -72,6 +77,7 @@ func (c *TemplateController) Create(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, p.Template())
 }
 
+// Delete handles DELETE /templates/:id.
 func (c *TemplateController) Delete(ctx echo.Context, templateID string) error {
 	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
 	if ownerID == "" {
@@ -84,6 +90,7 @@ func (c *TemplateController) Delete(ctx echo.Context, templateID string) error {
 	return ctx.JSON(http.StatusOK, p.DeleteResponse())
 }
 
+// GetByID handles GET /templates/:id.
 func (c *TemplateController) GetByID(ctx echo.Context, templateID string) error {
 	input, p := c.newIO()
 	if err := input.Get(ctx.Request().Context(), templateID); err != nil {
@@ -92,6 +99,7 @@ func (c *TemplateController) GetByID(ctx echo.Context, templateID string) error 
 	return ctx.JSON(http.StatusOK, p.Template())
 }
 
+// Update handles PUT /templates/:id.
 func (c *TemplateController) Update(ctx echo.Context, templateID string) error {
 	var body openapi.ModelsUpdateTemplateRequest
 	if err := ctx.Bind(&body); err != nil {
