@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
+	"strings"
 
-	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/domain/note"
 	"immortal-architecture-clean/backend/internal/domain/service"
 	"immortal-architecture-clean/backend/internal/domain/template"
@@ -35,26 +35,32 @@ func (u *NoteInteractor) Get(ctx context.Context, id string) (*note.WithMeta, er
 }
 
 func (u *NoteInteractor) Create(ctx context.Context, input port.NoteCreateInput) (*note.WithMeta, error) {
-	template, err := u.templates.Get(ctx, input.TemplateID)
+	tpl, err := u.templates.Get(ctx, input.TemplateID)
 	if err != nil {
 		return nil, err
 	}
 
-	sections := buildSections(template.Fields, input.Sections)
+	sections := buildSections("", tpl.Template.Fields, input.Sections)
+	if err := note.ValidateNoteForCreate(input.Title, tpl.Template, sections); err != nil {
+		return nil, err
+	}
 
 	var noteID string
 	err = u.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
-		nn, err := u.notes.Create(txCtx, note.Note{
-			Title:      input.Title,
-			TemplateID: input.TemplateID,
-			OwnerID:    input.OwnerID,
-			Status:     note.StatusDraft,
-		})
+		built, err := service.BuildNote(input.Title, tpl.Template, input.OwnerID, sections)
+		if err != nil {
+			return err
+		}
+		nn, err := u.notes.Create(txCtx, built)
 		if err != nil {
 			return err
 		}
 		noteID = nn.ID
-		return u.notes.ReplaceSections(txCtx, noteID, sections)
+		sectionsWithID := buildSections(noteID, tpl.Template.Fields, input.Sections)
+		if err := note.ValidateSections(tpl.Template.Fields, sectionsWithID); err != nil {
+			return err
+		}
+		return u.notes.ReplaceSections(txCtx, noteID, sectionsWithID)
 	})
 	if err != nil {
 		return nil, err
@@ -67,8 +73,11 @@ func (u *NoteInteractor) Update(ctx context.Context, input port.NoteUpdateInput)
 	if err != nil {
 		return nil, err
 	}
-	if current.Note.OwnerID != input.OwnerID {
-		return nil, domainerr.ErrUnauthorized
+	if err := note.ValidateNoteOwnership(current.Note.OwnerID, input.OwnerID); err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(input.Title) == "" {
+		return nil, note.ErrTitleRequired
 	}
 
 	err = u.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
@@ -80,12 +89,13 @@ func (u *NoteInteractor) Update(ctx context.Context, input port.NoteUpdateInput)
 			return err
 		}
 		if input.Sections != nil {
-			sections := make([]note.Section, 0, len(input.Sections))
-			for _, s := range input.Sections {
-				sections = append(sections, note.Section{
-					ID:      s.SectionID,
-					Content: s.Content,
-				})
+			tpl, err := u.templates.Get(ctx, current.Note.TemplateID)
+			if err != nil {
+				return err
+			}
+			sections := buildSections(current.Note.ID, tpl.Template.Fields, input.Sections)
+			if err := note.ValidateSections(tpl.Template.Fields, sections); err != nil {
+				return err
 			}
 			if err := u.notes.ReplaceSections(txCtx, input.ID, sections); err != nil {
 				return err
@@ -104,8 +114,8 @@ func (u *NoteInteractor) ChangeStatus(ctx context.Context, input port.NoteStatus
 	if err != nil {
 		return nil, err
 	}
-	if current.Note.OwnerID != input.OwnerID {
-		return nil, domainerr.ErrUnauthorized
+	if err := note.ValidateNoteOwnership(current.Note.OwnerID, input.OwnerID); err != nil {
+		return nil, err
 	}
 	if err := input.Status.Validate(); err != nil {
 		return nil, err
@@ -135,21 +145,26 @@ func (u *NoteInteractor) Delete(ctx context.Context, id, ownerID string) error {
 	if err != nil {
 		return err
 	}
-	if current.Note.OwnerID != ownerID {
-		return domainerr.ErrUnauthorized
+	if err := note.ValidateNoteOwnership(current.Note.OwnerID, ownerID); err != nil {
+		return err
 	}
 	return u.notes.Delete(ctx, id)
 }
 
-func buildSections(templateFields []template.Field, inputs []port.SectionInput) []note.Section {
+func buildSections(noteID string, templateFields []template.Field, inputs []port.SectionInput) []note.Section {
 	if len(inputs) == 0 {
-		return service.BuildSectionsFromTemplate(templateFields)
+		sections := service.BuildSectionsFromTemplate(templateFields)
+		for i := range sections {
+			sections[i].NoteID = noteID
+		}
+		return sections
 	}
 
 	sections := make([]note.Section, 0, len(inputs))
 	for _, s := range inputs {
 		sections = append(sections, note.Section{
 			FieldID: s.FieldID,
+			NoteID:  noteID,
 			Content: s.Content,
 		})
 	}

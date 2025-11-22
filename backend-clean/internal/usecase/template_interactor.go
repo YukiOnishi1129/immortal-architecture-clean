@@ -28,14 +28,15 @@ func (u *TemplateInteractor) Get(ctx context.Context, id string) (*template.With
 }
 
 func (u *TemplateInteractor) Create(ctx context.Context, input port.TemplateCreateInput) (*template.WithUsage, error) {
-	var createdID string
-	if len(input.Fields) > 0 {
-		fields, err := template.NormalizeAndValidate(input.Fields)
-		if err != nil {
-			return nil, err
-		}
-		input.Fields = fields
+	if err := template.ValidateTemplate(template.Template{
+		Name:    input.Name,
+		OwnerID: input.OwnerID,
+		Fields:  input.Fields,
+	}); err != nil {
+		return nil, err
 	}
+
+	var createdID string
 	err := u.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
 		tpl, err := u.repo.Create(txCtx, template.Template{
 			Name:    input.Name,
@@ -60,11 +61,14 @@ func (u *TemplateInteractor) Create(ctx context.Context, input port.TemplateCrea
 
 func (u *TemplateInteractor) Update(ctx context.Context, input port.TemplateUpdateInput) (*template.WithUsage, error) {
 	if input.Fields != nil {
-		fields, err := template.NormalizeAndValidate(input.Fields)
-		if err != nil {
+		if err := template.ValidateTemplate(template.Template{
+			ID:      input.ID,
+			Name:    input.Name,
+			Fields:  input.Fields,
+			OwnerID: "",
+		}); err != nil {
 			return nil, err
 		}
-		input.Fields = fields
 	}
 	err := u.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
 		_, err := u.repo.Update(txCtx, template.Template{
