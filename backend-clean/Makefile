@@ -15,6 +15,10 @@ lint:
 test:
 	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO_TEST) ./...
 
+.PHONY: sqlc
+sqlc:
+	@sqlc generate
+
 .PHONY: oapi
 oapi:
 	@test -f $(OPENAPI_SPEC) || (echo "OpenAPI spec not found at $(OPENAPI_SPEC). Run api-schema/scripts/generate-openapi.sh first."; exit 1)
