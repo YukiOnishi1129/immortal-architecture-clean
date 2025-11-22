@@ -9,7 +9,6 @@ import (
 )
 
 // NoteInputPort defines note use case inputs.
-// NoteInputPort defines note use case inputs.
 type NoteInputPort interface {
 	List(ctx context.Context, filters note.Filters) error
 	Get(ctx context.Context, id string) error
@@ -19,7 +18,6 @@ type NoteInputPort interface {
 	Delete(ctx context.Context, id, ownerID string) error
 }
 
-// NoteOutputPort defines presenter for notes.
 // NoteOutputPort defines note presenters.
 type NoteOutputPort interface {
 	PresentNoteList(ctx context.Context, notes []note.WithMeta) error
@@ -27,7 +25,6 @@ type NoteOutputPort interface {
 	PresentNoteDeleted(ctx context.Context) error
 }
 
-// NoteRepository abstracts note persistence.
 // NoteRepository abstracts note persistence.
 type NoteRepository interface {
 	List(ctx context.Context, filters note.Filters) ([]note.WithMeta, error)
@@ -40,7 +37,6 @@ type NoteRepository interface {
 }
 
 // NoteCreateInput is input for creating notes.
-// NoteCreateInput is input for creating notes.
 type NoteCreateInput struct {
 	Title      string
 	TemplateID string
@@ -49,13 +45,11 @@ type NoteCreateInput struct {
 }
 
 // SectionInput is input for creating sections.
-// SectionInput is input for creating sections.
 type SectionInput struct {
 	FieldID string
 	Content string
 }
 
-// NoteUpdateInput is input for updating notes.
 // NoteUpdateInput is input for updating notes.
 type NoteUpdateInput struct {
 	ID       string
@@ -65,13 +59,11 @@ type NoteUpdateInput struct {
 }
 
 // SectionUpdateInput is input for updating sections.
-// SectionUpdateInput is input for updating sections.
 type SectionUpdateInput struct {
 	SectionID string
 	Content   string
 }
 
-// NoteStatusChangeInput is input for status changes.
 // NoteStatusChangeInput is input for status changes.
 type NoteStatusChangeInput struct {
 	ID      string

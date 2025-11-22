@@ -19,13 +19,10 @@ func NewServer(ac *AccountController, nc *NoteController, tc *TemplateController
 }
 
 // AccountsCreateOrGetAccount handles POST /api/accounts/auth.
-// AccountsCreateOrGetAccount handles POST /api/accounts/auth.
-// AccountsCreateOrGetAccount handles POST /api/accounts/auth.
 func (s *Server) AccountsCreateOrGetAccount(ctx echo.Context) error {
 	return s.account.CreateOrGet(ctx)
 }
 
-// AccountsGetCurrentAccount handles GET /api/accounts/me.
 // AccountsGetCurrentAccount handles GET /api/accounts/me.
 func (s *Server) AccountsGetCurrentAccount(ctx echo.Context) error {
 	return s.account.GetCurrent(ctx)
@@ -37,12 +34,10 @@ func (s *Server) AccountsGetAccountById(ctx echo.Context, accountId string) erro
 }
 
 // NotesListNotes handles GET /api/notes.
-// NotesListNotes handles GET /api/notes.
 func (s *Server) NotesListNotes(ctx echo.Context, params openapi.NotesListNotesParams) error {
 	return s.note.List(ctx, params)
 }
 
-// NotesCreateNote handles POST /api/notes.
 // NotesCreateNote handles POST /api/notes.
 func (s *Server) NotesCreateNote(ctx echo.Context) error {
 	return s.note.Create(ctx)
@@ -77,12 +72,10 @@ func (s *Server) NotesUnpublishNote(ctx echo.Context, noteId string) error { //n
 }
 
 // TemplatesListTemplates handles GET /api/templates.
-// TemplatesListTemplates handles GET /api/templates.
 func (s *Server) TemplatesListTemplates(ctx echo.Context, params openapi.TemplatesListTemplatesParams) error {
 	return s.template.List(ctx, params)
 }
 
-// TemplatesCreateTemplate handles POST /api/templates.
 // TemplatesCreateTemplate handles POST /api/templates.
 func (s *Server) TemplatesCreateTemplate(ctx echo.Context) error {
 	return s.template.Create(ctx)
