@@ -5,13 +5,13 @@ on:
     branches:
       - main
     paths:
-      - "backend/**"
+      - "backend-clean/**"
       - ".github/workflows/backend-ci.yml"
   pull_request:
     branches:
       - main
     paths:
-      - "backend/**"
+      - "backend-clean/**"
       - ".github/workflows/backend-ci.yml"
 
 jobs:
