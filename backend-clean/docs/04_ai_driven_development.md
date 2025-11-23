@@ -600,16 +600,21 @@ AI:
 
 ## 🎯 次のステップ
 
-1. **実際にAIに指示してみる**
+1. **ローカル環境をセットアップする**
+   - [05_local_setup.md](./05_local_setup.md) を参照
+   - Docker Compose、マイグレーション、テストまで実行
+
+2. **実際にAIに指示してみる**
    - 「コメント機能を追加して」と指示
    - 生成されたコードをレビュー
-
-2. **テストを実行してみる**
-   - `go test ./...`
-   - カバレッジを確認: `go test -cover ./...`
 
 3. **自分の機能を追加してみる**
    - 「いいね機能」「共有機能」など
    - AIと一緒に実装
+
+4. **OpenAPI定義を変更してみる**
+   - `api-schema/typespec/` の定義を編集
+   - `pnpm run generate` でコード再生成
+   - `make oapi` でGoコード再生成
 
 **Happy AI-Driven Development!** 🎉
