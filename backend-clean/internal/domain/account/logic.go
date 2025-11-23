@@ -35,6 +35,13 @@ func UpdateProfile(current Account, input OAuthAccountInput) (Account, error) {
 		return current, err
 	}
 	current.Email = email
+	// Refresh provider identity from the latest OAuth payload.
+	if input.Provider != "" {
+		current.Provider = input.Provider
+	}
+	if input.ProviderAccountID != "" {
+		current.ProviderAccountID = input.ProviderAccountID
+	}
 	if input.FirstName != "" {
 		current.FirstName = input.FirstName
 	}
