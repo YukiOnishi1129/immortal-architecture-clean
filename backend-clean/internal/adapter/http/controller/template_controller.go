@@ -50,6 +50,15 @@ func (c *TemplateController) List(ctx echo.Context, params openapi.TemplatesList
 	return ctx.JSON(http.StatusOK, p.Templates())
 }
 
+// GetByID handles GET /templates/:id.
+func (c *TemplateController) GetByID(ctx echo.Context, templateID string) error {
+	input, p := c.newIO()
+	if err := input.Get(ctx.Request().Context(), templateID); err != nil {
+		return handleError(ctx, err)
+	}
+	return ctx.JSON(http.StatusOK, p.Template())
+}
+
 // Create handles POST /templates.
 func (c *TemplateController) Create(ctx echo.Context) error {
 	var body openapi.ModelsCreateTemplateRequest
@@ -72,28 +81,6 @@ func (c *TemplateController) Create(ctx echo.Context) error {
 		Fields:  fields,
 	})
 	if err != nil {
-		return handleError(ctx, err)
-	}
-	return ctx.JSON(http.StatusOK, p.Template())
-}
-
-// Delete handles DELETE /templates/:id.
-func (c *TemplateController) Delete(ctx echo.Context, templateID string, params openapi.TemplatesDeleteTemplateParams) error {
-	ownerID := strings.TrimSpace(params.OwnerId)
-	if ownerID == "" {
-		return handleError(ctx, domainerr.ErrUnauthorized)
-	}
-	input, p := c.newIO()
-	if err := input.Delete(ctx.Request().Context(), templateID, ownerID); err != nil {
-		return handleError(ctx, err)
-	}
-	return ctx.JSON(http.StatusOK, p.DeleteResponse())
-}
-
-// GetByID handles GET /templates/:id.
-func (c *TemplateController) GetByID(ctx echo.Context, templateID string) error {
-	input, p := c.newIO()
-	if err := input.Get(ctx.Request().Context(), templateID); err != nil {
 		return handleError(ctx, err)
 	}
 	return ctx.JSON(http.StatusOK, p.Template())
@@ -129,6 +116,19 @@ func (c *TemplateController) Update(ctx echo.Context, templateID string, params 
 		return handleError(ctx, err)
 	}
 	return ctx.JSON(http.StatusOK, p.Template())
+}
+
+// Delete handles DELETE /templates/:id.
+func (c *TemplateController) Delete(ctx echo.Context, templateID string, params openapi.TemplatesDeleteTemplateParams) error {
+	ownerID := strings.TrimSpace(params.OwnerId)
+	if ownerID == "" {
+		return handleError(ctx, domainerr.ErrUnauthorized)
+	}
+	input, p := c.newIO()
+	if err := input.Delete(ctx.Request().Context(), templateID, ownerID); err != nil {
+		return handleError(ctx, err)
+	}
+	return ctx.JSON(http.StatusOK, p.DeleteResponse())
 }
 
 func (c *TemplateController) newIO() (port.TemplateInputPort, *presenter.TemplatePresenter) {
