@@ -82,7 +82,7 @@ No authorization required
 
 ## templatesDeleteTemplate
 
-> ModelsSuccessResponse templatesDeleteTemplate(templateId)
+> ModelsSuccessResponse templatesDeleteTemplate(templateId, ownerId)
 
 Delete template
 
@@ -104,6 +104,8 @@ async function example() {
   const body = {
     // string
     templateId: templateId_example,
+    // string | 所有者IDフィルター
+    ownerId: ownerId_example,
   } satisfies TemplatesDeleteTemplateRequest;
 
   try {
@@ -124,6 +126,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **templateId** | `string` |  | [Defaults to `undefined`] |
+| **ownerId** | `string` | 所有者IDフィルター | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -289,7 +292,7 @@ No authorization required
 
 ## templatesUpdateTemplate
 
-> ModelsTemplateResponse templatesUpdateTemplate(templateId, modelsUpdateTemplateRequest)
+> ModelsTemplateResponse templatesUpdateTemplate(templateId, ownerId, modelsUpdateTemplateRequest)
 
 Update template
 
@@ -311,6 +314,8 @@ async function example() {
   const body = {
     // string
     templateId: templateId_example,
+    // string | 所有者IDフィルター
+    ownerId: ownerId_example,
     // ModelsUpdateTemplateRequest
     modelsUpdateTemplateRequest: ...,
   } satisfies TemplatesUpdateTemplateRequest;
@@ -333,6 +338,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **templateId** | `string` |  | [Defaults to `undefined`] |
+| **ownerId** | `string` | 所有者IDフィルター | [Defaults to `undefined`] |
 | **modelsUpdateTemplateRequest** | [ModelsUpdateTemplateRequest](ModelsUpdateTemplateRequest.md) |  | |
 
 ### Return type

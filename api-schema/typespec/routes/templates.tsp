@@ -43,6 +43,7 @@ interface Templates {
   @summary("Update template")
   updateTemplate(
     @path templateId: string,
+    @query ownerId: string,
     @body request: UpdateTemplateRequest
   ): TemplateResponse | NotFoundError | ForbiddenError | BadRequestError | UnauthorizedError;
 
@@ -51,6 +52,7 @@ interface Templates {
   @route("/{templateId}")
   @summary("Delete template")
   deleteTemplate(
-    @path templateId: string
+    @path templateId: string,
+    @query ownerId: string
   ): SuccessResponse | NotFoundError | ForbiddenError | BadRequestError | UnauthorizedError;
 }

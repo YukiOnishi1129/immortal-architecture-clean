@@ -94,10 +94,12 @@ export class NoteService {
 
   async updateNote(
     id: string,
+    ownerId: string,
     request: UpdateNoteRequest,
   ): Promise<NoteResponse> {
     const note = await this.api.notesUpdateNote({
       noteId: id,
+      ownerId,
       modelsUpdateNoteRequest: {
         id,
         title: request.title,
@@ -110,18 +112,18 @@ export class NoteService {
     return toNoteResponse(note);
   }
 
-  async publishNote(noteId: string): Promise<NoteResponse> {
-    const note = await this.api.notesPublishNote({ noteId });
+  async publishNote(noteId: string, ownerId: string): Promise<NoteResponse> {
+    const note = await this.api.notesPublishNote({ noteId, ownerId });
     return toNoteResponse(note);
   }
 
-  async unpublishNote(noteId: string): Promise<NoteResponse> {
-    const note = await this.api.notesUnpublishNote({ noteId });
+  async unpublishNote(noteId: string, ownerId: string): Promise<NoteResponse> {
+    const note = await this.api.notesUnpublishNote({ noteId, ownerId });
     return toNoteResponse(note);
   }
 
-  async deleteNote(id: string): Promise<void> {
-    await this.api.notesDeleteNote({ noteId: id });
+  async deleteNote(id: string, ownerId: string): Promise<void> {
+    await this.api.notesDeleteNote({ noteId: id, ownerId });
   }
 }
 

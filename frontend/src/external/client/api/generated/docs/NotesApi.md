@@ -84,7 +84,7 @@ No authorization required
 
 ## notesDeleteNote
 
-> ModelsSuccessResponse notesDeleteNote(noteId)
+> ModelsSuccessResponse notesDeleteNote(noteId, ownerId)
 
 Delete note
 
@@ -106,6 +106,8 @@ async function example() {
   const body = {
     // string
     noteId: noteId_example,
+    // string | 所有者IDフィルター
+    ownerId: ownerId_example,
   } satisfies NotesDeleteNoteRequest;
 
   try {
@@ -126,6 +128,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **noteId** | `string` |  | [Defaults to `undefined`] |
+| **ownerId** | `string` | 所有者IDフィルター | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -297,7 +300,7 @@ No authorization required
 
 ## notesPublishNote
 
-> ModelsNoteResponse notesPublishNote(noteId)
+> ModelsNoteResponse notesPublishNote(noteId, ownerId)
 
 Publish note
 
@@ -319,6 +322,8 @@ async function example() {
   const body = {
     // string
     noteId: noteId_example,
+    // string | 所有者ID（公開権限チェック用）
+    ownerId: ownerId_example,
   } satisfies NotesPublishNoteRequest;
 
   try {
@@ -339,6 +344,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **noteId** | `string` |  | [Defaults to `undefined`] |
+| **ownerId** | `string` | 所有者ID（公開権限チェック用） | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -365,7 +371,7 @@ No authorization required
 
 ## notesUnpublishNote
 
-> ModelsNoteResponse notesUnpublishNote(noteId)
+> ModelsNoteResponse notesUnpublishNote(noteId, ownerId)
 
 Unpublish note
 
@@ -387,6 +393,8 @@ async function example() {
   const body = {
     // string
     noteId: noteId_example,
+    // string | 所有者ID（公開権限チェック用）
+    ownerId: ownerId_example,
   } satisfies NotesUnpublishNoteRequest;
 
   try {
@@ -407,6 +415,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **noteId** | `string` |  | [Defaults to `undefined`] |
+| **ownerId** | `string` | 所有者ID（公開権限チェック用） | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -433,7 +442,7 @@ No authorization required
 
 ## notesUpdateNote
 
-> ModelsNoteResponse notesUpdateNote(noteId, modelsUpdateNoteRequest)
+> ModelsNoteResponse notesUpdateNote(noteId, ownerId, modelsUpdateNoteRequest)
 
 Update note
 
@@ -455,6 +464,8 @@ async function example() {
   const body = {
     // string
     noteId: noteId_example,
+    // string | 所有者IDフィルター
+    ownerId: ownerId_example,
     // ModelsUpdateNoteRequest
     modelsUpdateNoteRequest: ...,
   } satisfies NotesUpdateNoteRequest;
@@ -477,6 +488,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **noteId** | `string` |  | [Defaults to `undefined`] |
+| **ownerId** | `string` | 所有者IDフィルター | [Defaults to `undefined`] |
 | **modelsUpdateNoteRequest** | [ModelsUpdateNoteRequest](ModelsUpdateNoteRequest.md) |  | |
 
 ### Return type

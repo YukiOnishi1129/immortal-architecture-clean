@@ -49,6 +49,7 @@ export interface TemplatesCreateTemplateRequest {
 
 export interface TemplatesDeleteTemplateRequest {
     templateId: string;
+    ownerId: string;
 }
 
 export interface TemplatesGetTemplateByIdRequest {
@@ -62,6 +63,7 @@ export interface TemplatesListTemplatesRequest {
 
 export interface TemplatesUpdateTemplateRequest {
     templateId: string;
+    ownerId: string;
     modelsUpdateTemplateRequest: ModelsUpdateTemplateRequest;
 }
 
@@ -123,7 +125,18 @@ export class TemplatesApi extends runtime.BaseAPI {
             );
         }
 
+        if (requestParameters['ownerId'] == null) {
+            throw new runtime.RequiredError(
+                'ownerId',
+                'Required parameter "ownerId" was null or undefined when calling templatesDeleteTemplate().'
+            );
+        }
+
         const queryParameters: any = {};
+
+        if (requestParameters['ownerId'] != null) {
+            queryParameters['ownerId'] = requestParameters['ownerId'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -240,6 +253,13 @@ export class TemplatesApi extends runtime.BaseAPI {
             );
         }
 
+        if (requestParameters['ownerId'] == null) {
+            throw new runtime.RequiredError(
+                'ownerId',
+                'Required parameter "ownerId" was null or undefined when calling templatesUpdateTemplate().'
+            );
+        }
+
         if (requestParameters['modelsUpdateTemplateRequest'] == null) {
             throw new runtime.RequiredError(
                 'modelsUpdateTemplateRequest',
@@ -248,6 +268,10 @@ export class TemplatesApi extends runtime.BaseAPI {
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters['ownerId'] != null) {
+            queryParameters['ownerId'] = requestParameters['ownerId'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 

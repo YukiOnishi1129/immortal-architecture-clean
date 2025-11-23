@@ -21,12 +21,12 @@ export async function createNoteCommand(request: unknown) {
 }
 
 export async function updateNoteCommand(id: string, request: unknown) {
-  const _session = await getAuthenticatedSessionServer();
+  const session = await getAuthenticatedSessionServer();
 
   // リクエストのバリデーション
   const validated = UpdateNoteRequestSchema.parse(request);
 
-  const note = await noteService.updateNote(id, validated);
+  const note = await noteService.updateNote(id, session.account.id, validated);
   return NoteResponseSchema.parse(note);
 }
 
@@ -40,7 +40,10 @@ export async function publishNoteCommand(request: unknown) {
     throw new Error("Account not found");
   }
 
-  const note = await noteService.publishNote(validated.noteId);
+  const note = await noteService.publishNote(
+    validated.noteId,
+    session.account.id,
+  );
   return NoteResponseSchema.parse(note);
 }
 
@@ -54,7 +57,10 @@ export async function unpublishNoteCommand(request: unknown) {
     throw new Error("Account not found");
   }
 
-  const note = await noteService.unpublishNote(validated.noteId);
+  const note = await noteService.unpublishNote(
+    validated.noteId,
+    session.account.id,
+  );
   return NoteResponseSchema.parse(note);
 }
 
@@ -65,7 +71,7 @@ export async function deleteNoteCommand(id: string) {
     throw new Error("Account not found");
   }
 
-  await noteService.deleteNote(id);
+  await noteService.deleteNote(id, session.account.id);
 
   return { success: true };
 }
