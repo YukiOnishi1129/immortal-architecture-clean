@@ -2,6 +2,10 @@ GOLANGCI_LINT ?= $(shell go env GOPATH)/bin/golangci-lint
 GOCACHE ?= $(CURDIR)/.gocache
 GOMODCACHE ?= $(CURDIR)/.gomodcache
 GO_TEST ?= go test
+PKG ?=
+FILE ?=
+RUN ?=
+TEST_FLAGS ?= -count=1
 
 OAPI_CODEGEN ?= oapi-codegen
 OPENAPI_SPEC ?= ../api-schema/generated/openapi.yaml
@@ -27,6 +31,34 @@ lint:
 .PHONY: test
 test:
 	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO_TEST) ./...
+
+# Run all tests (override flags with TEST_FLAGS, e.g. TEST_FLAGS="-count=1 -v")
+.PHONY: test-all
+test-all:
+	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO_TEST) $(TEST_FLAGS) ./...
+
+# Run package-level tests. Example:
+#   make test-pkg PKG=./internal/domain/note
+.PHONY: test-pkg
+test-pkg:
+	@test -n "$(PKG)" || (echo "PKG is required, e.g. make test-pkg PKG=./internal/domain/note"; exit 1)
+	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO_TEST) $(TEST_FLAGS) $(PKG)
+
+# Run a single test file. Example:
+#   make test-file FILE=internal/domain/note/logic_test.go
+.PHONY: test-file
+test-file:
+	@test -n "$(FILE)" || (echo "FILE is required, e.g. make test-file FILE=internal/domain/note/logic_test.go"; exit 1)
+	@dir=$$(dirname $(FILE)); \
+	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO_TEST) $(TEST_FLAGS) ./$$dir
+
+# Run a specific test (regexp). Example:
+#   make test-run PKG=./internal/domain/note RUN=TestValidateNoteForCreate
+.PHONY: test-run
+test-run:
+	@test -n "$(PKG)" || (echo "PKG is required, e.g. make test-run PKG=./internal/domain/note RUN=TestValidateNoteForCreate"; exit 1)
+	@test -n "$(RUN)" || (echo "RUN is required, e.g. make test-run PKG=./internal/domain/note RUN=TestValidateNoteForCreate"; exit 1)
+	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO_TEST) $(TEST_FLAGS) -run $(RUN) $(PKG)
 
 .PHONY: sqlc
 sqlc:
