@@ -6,6 +6,19 @@ GO_TEST ?= go test
 OAPI_CODEGEN ?= oapi-codegen
 OPENAPI_SPEC ?= ../api-schema/generated/openapi.yaml
 OAPI_CONFIG ?= oapi-codegen.yaml
+MIGRATE ?= migrate
+MIGRATIONS_DIR ?= migrations
+NAME ?=
+DB_HOST ?= db
+ENV_FILE ?= .env
+
+ifneq (,$(wildcard .env))
+include .env
+export $(shell grep -E '^[A-Za-z0-9_]+=' .env | cut -d= -f1)
+endif
+
+# Build DATABASE_URL after .env is loaded, allowing override from environment.
+DATABASE_URL ?= postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
 
 .PHONY: lint
 lint:
@@ -27,3 +40,20 @@ oapi:
 .PHONY: build
 build:
 	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) go build ./...
+
+.PHONY: migrate-up
+migrate-up:
+	@bash -c 'set -a; if [ -f $(ENV_FILE) ]; then source $(ENV_FILE); fi; set +a; \
+	if [ -z "$$MIGRATION_DATABASE_URL" ]; then echo "Set MIGRATION_DATABASE_URL in $(ENV_FILE) or environment"; exit 1; fi; \
+	"$(MIGRATE)" -path "$(MIGRATIONS_DIR)" -database "$$MIGRATION_DATABASE_URL" up'
+
+.PHONY: migrate-down
+migrate-down:
+	@bash -c 'set -a; if [ -f $(ENV_FILE) ]; then source $(ENV_FILE); fi; set +a; \
+	if [ -z "$$MIGRATION_DATABASE_URL" ]; then echo "Set MIGRATION_DATABASE_URL in $(ENV_FILE) or environment"; exit 1; fi; \
+	"$(MIGRATE)" -path "$(MIGRATIONS_DIR)" -database "$$MIGRATION_DATABASE_URL" down 1'
+
+.PHONY: migrate-new
+migrate-new:
+	@test -n "$(NAME)" || (echo "NAME is required, e.g. make migrate-new NAME=add_users"; exit 1)
+	$(MIGRATE) create -ext sql -dir $(MIGRATIONS_DIR) $(NAME)

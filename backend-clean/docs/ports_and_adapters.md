@@ -33,7 +33,7 @@
 - **Adapter**:  
   - HTTP: `internal/adapter/http/controller/*`, `internal/adapter/http/presenter/*`, 生成物は `internal/adapter/http/generated/openapi`  
   - Gateway: `internal/adapter/gateway/db`（sqlc生成物＋リポジトリ実装）、`.../externalapi` など外部リソースごとにサブディレクトリ
-- **Driver（配線・初期化）**: `internal/driver/db`（接続/TX）, `internal/driver/config`, `internal/driver/initializer.go`（Echo 起動とハンドラ登録）など
+- **Driver（配線・初期化）**: `internal/driver/db`（接続/TX）, `internal/driver/config`, `internal/driver/initializer/api`（Echo 起動とハンドラ登録）など
 
 ## よくある疑問
 - **UseCase を直接呼べばいい？**  

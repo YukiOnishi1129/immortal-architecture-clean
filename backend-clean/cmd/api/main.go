@@ -5,7 +5,7 @@ import (
 	"context"
 	"log"
 
-	"immortal-architecture-clean/backend/internal/driver/initializer"
+	initializer "immortal-architecture-clean/backend/internal/driver/initializer/api"
 )
 
 func main() {
