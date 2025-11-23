@@ -61,6 +61,15 @@ func (c *NoteController) List(ctx echo.Context, params openapi.NotesListNotesPar
 	return ctx.JSON(http.StatusOK, p.Notes())
 }
 
+// GetByID handles GET /notes/:id.
+func (c *NoteController) GetByID(ctx echo.Context, noteID string) error {
+	input, p := c.newIO()
+	if err := input.Get(ctx.Request().Context(), noteID); err != nil {
+		return handleError(ctx, err)
+	}
+	return ctx.JSON(http.StatusOK, p.Note())
+}
+
 // Create handles creating a new note.
 // Create handles POST /notes.
 func (c *NoteController) Create(ctx echo.Context) error {
@@ -86,29 +95,6 @@ func (c *NoteController) Create(ctx echo.Context) error {
 		Sections:   sections,
 	})
 	if err != nil {
-		return handleError(ctx, err)
-	}
-	return ctx.JSON(http.StatusOK, p.Note())
-}
-
-// Delete handles deleting a note.
-// Delete handles DELETE /notes/:id.
-func (c *NoteController) Delete(ctx echo.Context, noteID string, params openapi.NotesDeleteNoteParams) error {
-	ownerID := strings.TrimSpace(params.OwnerId)
-	if ownerID == "" {
-		return handleError(ctx, domainerr.ErrUnauthorized)
-	}
-	input, p := c.newIO()
-	if err := input.Delete(ctx.Request().Context(), noteID, ownerID); err != nil {
-		return handleError(ctx, err)
-	}
-	return ctx.JSON(http.StatusOK, p.DeleteResponse())
-}
-
-// GetByID handles GET /notes/:id.
-func (c *NoteController) GetByID(ctx echo.Context, noteID string) error {
-	input, p := c.newIO()
-	if err := input.Get(ctx.Request().Context(), noteID); err != nil {
 		return handleError(ctx, err)
 	}
 	return ctx.JSON(http.StatusOK, p.Note())
@@ -143,6 +129,20 @@ func (c *NoteController) Update(ctx echo.Context, noteID string, params openapi.
 		return handleError(ctx, err)
 	}
 	return ctx.JSON(http.StatusOK, p.Note())
+}
+
+// Delete handles deleting a note.
+// Delete handles DELETE /notes/:id.
+func (c *NoteController) Delete(ctx echo.Context, noteID string, params openapi.NotesDeleteNoteParams) error {
+	ownerID := strings.TrimSpace(params.OwnerId)
+	if ownerID == "" {
+		return handleError(ctx, domainerr.ErrUnauthorized)
+	}
+	input, p := c.newIO()
+	if err := input.Delete(ctx.Request().Context(), noteID, ownerID); err != nil {
+		return handleError(ctx, err)
+	}
+	return ctx.JSON(http.StatusOK, p.DeleteResponse())
 }
 
 // Publish handles publishing a note.

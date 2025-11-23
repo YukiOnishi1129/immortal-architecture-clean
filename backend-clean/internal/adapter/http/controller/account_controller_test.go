@@ -2,117 +2,136 @@ package controller
 
 import (
 	"bytes"
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/labstack/echo/v4"
 
+	ctrlmock "immortal-architecture-clean/backend/internal/adapter/http/controller/mock"
 	"immortal-architecture-clean/backend/internal/adapter/http/presenter"
-	"immortal-architecture-clean/backend/internal/domain/account"
+	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/port"
 )
 
-// stubAccountInput is a lightweight input port stub for controller tests.
-type stubAccountInput struct {
-	createErr error
-	getErr    error
-	output    port.AccountOutputPort
-}
+func TestAccountController_CreateOrGet(t *testing.T) {
+	tests := []struct {
+		name       string
+		body       string
+		wantStatus int
+	}{
+		{
+			name:       "[Success] create or get",
+			body:       `{"email":"user@example.com","name":"Taro","provider":"google","providerAccountId":"pid"}`,
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "[Fail] bind error",
+			body:       `not-json`,
+			wantStatus: http.StatusBadRequest,
+		},
+	}
 
-func (s *stubAccountInput) CreateOrGet(ctx context.Context, input account.OAuthAccountInput) error {
-	// simulate usecase setting presenter response
-	if s.output != nil && s.createErr == nil {
-		_ = s.output.PresentAccount(ctx, &account.Account{
-			ID:        "acc-1",
-			Email:     account.Email(input.Email),
-			FirstName: input.FirstName,
-			Provider:  input.Provider,
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := presenter.NewAccountPresenter()
+			input := &ctrlmock.AccountInputStub{}
+			ctrl := NewAccountController(
+				func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort {
+					input.Output = output
+					return input
+				},
+				func() *presenter.AccountPresenter { return p },
+				func() port.AccountRepository { return nil },
+			)
+
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodPost, "/api/accounts/auth", bytes.NewBufferString(tt.body))
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+
+			_ = ctrl.CreateOrGet(c)
+			if rec.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", rec.Code, tt.wantStatus)
+			}
+			if tt.wantStatus == http.StatusOK && (p.Response() == nil || p.Response().Email != "user@example.com") {
+				t.Fatalf("presenter response not set: %+v", p.Response())
+			}
 		})
 	}
-	return s.createErr
 }
 
-func (s *stubAccountInput) GetByID(ctx context.Context, id string) error {
-	if s.output != nil && s.getErr == nil {
-		_ = s.output.PresentAccount(ctx, &account.Account{
-			ID:        id,
-			Email:     account.Email("user@example.com"),
-			FirstName: "Taro",
-			Provider:  "google",
+func TestAccountController_GetCurrent(t *testing.T) {
+	tests := []struct {
+		name       string
+		headerID   string
+		wantStatus int
+	}{
+		{name: "[Success] with header", headerID: "acc-1", wantStatus: http.StatusOK},
+		{name: "[Fail] missing header", headerID: "", wantStatus: http.StatusForbidden},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := presenter.NewAccountPresenter()
+			input := &ctrlmock.AccountInputStub{}
+			ctrl := NewAccountController(
+				func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort {
+					input.Output = output
+					return input
+				},
+				func() *presenter.AccountPresenter { return p },
+				func() port.AccountRepository { return nil },
+			)
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/api/accounts/me", nil)
+			if tt.headerID != "" {
+				req.Header.Set("X-Account-ID", tt.headerID)
+			}
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+
+			_ = ctrl.GetCurrent(c)
+			if rec.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", rec.Code, tt.wantStatus)
+			}
 		})
 	}
-	return s.getErr
 }
 
-// Tests
-
-func TestAccountController_CreateOrGet_Success(t *testing.T) {
-	p := presenter.NewAccountPresenter()
-	input := &stubAccountInput{}
-	ctrl := NewAccountController(
-		func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort {
-			input.output = output
-			return input
-		},
-		func() *presenter.AccountPresenter { return p },
-		func() port.AccountRepository { return nil },
-	)
-
-	e := echo.New()
-	body := `{"email":"user@example.com","name":"Taro","provider":"google","providerAccountId":"pid"}`
-	req := httptest.NewRequest(http.MethodPost, "/api/accounts/auth", bytes.NewBufferString(body))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-
-	if err := ctrl.CreateOrGet(c); err != nil {
-		t.Fatalf("handler returned error: %v", err)
+func TestAccountController_GetByID(t *testing.T) {
+	tests := []struct {
+		name       string
+		getErr     error
+		wantStatus int
+	}{
+		{name: "[Success] get by id", wantStatus: http.StatusOK},
+		{name: "[Fail] not found", getErr: domainerr.ErrNotFound, wantStatus: http.StatusNotFound},
 	}
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status = %d, want 200", rec.Code)
-	}
-	if p.Response() == nil || p.Response().Email != "user@example.com" {
-		t.Fatalf("presenter response not set: %+v", p.Response())
-	}
-}
 
-func TestAccountController_CreateOrGet_BadRequest(t *testing.T) {
-	ctrl := NewAccountController(
-		func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort {
-			return &stubAccountInput{output: output}
-		},
-		func() *presenter.AccountPresenter { return presenter.NewAccountPresenter() },
-		func() port.AccountRepository { return nil },
-	)
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/api/accounts/auth", bytes.NewBufferString("not-json"))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := presenter.NewAccountPresenter()
+			input := &ctrlmock.AccountInputStub{GetErr: tt.getErr}
+			ctrl := NewAccountController(
+				func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort {
+					input.Output = output
+					return input
+				},
+				func() *presenter.AccountPresenter { return p },
+				func() port.AccountRepository { return nil },
+			)
 
-	_ = ctrl.CreateOrGet(c)
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status = %d, want 400", rec.Code)
-	}
-}
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/api/accounts/acc-1", nil)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
 
-func TestAccountController_GetCurrent_NoHeader(t *testing.T) {
-	ctrl := NewAccountController(
-		func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort {
-			return &stubAccountInput{output: output}
-		},
-		func() *presenter.AccountPresenter { return presenter.NewAccountPresenter() },
-		func() port.AccountRepository { return nil },
-	)
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/api/accounts/me", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-
-	_ = ctrl.GetCurrent(c)
-	if rec.Code != http.StatusForbidden {
-		t.Fatalf("status = %d, want 403", rec.Code)
+			_ = ctrl.GetByID(c, "acc-1")
+			if rec.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", rec.Code, tt.wantStatus)
+			}
+		})
 	}
 }
