@@ -410,5 +410,3 @@ func TestTemplateInteractor_Delete(t *testing.T) {
 		})
 	}
 }
-
-func strPtr(s string) *string { return &s }
