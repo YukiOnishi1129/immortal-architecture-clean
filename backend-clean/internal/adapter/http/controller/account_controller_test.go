@@ -18,7 +18,9 @@ func TestAccountController_CreateOrGet(t *testing.T) {
 	tests := []struct {
 		name       string
 		body       string
+		createErr  error
 		wantStatus int
+		wantBody   string
 	}{
 		{
 			name:       "[Success] create or get",
@@ -26,16 +28,24 @@ func TestAccountController_CreateOrGet(t *testing.T) {
 			wantStatus: http.StatusOK,
 		},
 		{
+			name:       "[Fail] usecase error",
+			body:       `{"email":"user@example.com","name":"Taro","provider":"google","providerAccountId":"pid"}`,
+			createErr:  domainerr.ErrNotFound,
+			wantStatus: http.StatusNotFound,
+			wantBody:   domainerr.ErrNotFound.Error(),
+		},
+		{
 			name:       "[Fail] bind error",
 			body:       `not-json`,
 			wantStatus: http.StatusBadRequest,
+			wantBody:   "invalid body",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := presenter.NewAccountPresenter()
-			input := &ctrlmock.AccountInputStub{}
+			input := &ctrlmock.AccountInputStub{CreateErr: tt.createErr}
 			ctrl := NewAccountController(
 				func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort {
 					input.Output = output
@@ -52,9 +62,7 @@ func TestAccountController_CreateOrGet(t *testing.T) {
 			c := e.NewContext(req, rec)
 
 			_ = ctrl.CreateOrGet(c)
-			if rec.Code != tt.wantStatus {
-				t.Fatalf("status = %d, want %d", rec.Code, tt.wantStatus)
-			}
+			assertStatusBody(t, rec, tt.wantStatus, tt.wantBody)
 			if tt.wantStatus == http.StatusOK && (p.Response() == nil || p.Response().Email != "user@example.com") {
 				t.Fatalf("presenter response not set: %+v", p.Response())
 			}
@@ -66,16 +74,19 @@ func TestAccountController_GetCurrent(t *testing.T) {
 	tests := []struct {
 		name       string
 		headerID   string
+		getErr     error
 		wantStatus int
+		wantBody   string
 	}{
 		{name: "[Success] with header", headerID: "acc-1", wantStatus: http.StatusOK},
-		{name: "[Fail] missing header", headerID: "", wantStatus: http.StatusForbidden},
+		{name: "[Fail] missing header", headerID: "", wantStatus: http.StatusForbidden, wantBody: domainerr.ErrUnauthorized.Error()},
+		{name: "[Fail] usecase not found", headerID: "acc-1", getErr: domainerr.ErrNotFound, wantStatus: http.StatusNotFound, wantBody: domainerr.ErrNotFound.Error()},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := presenter.NewAccountPresenter()
-			input := &ctrlmock.AccountInputStub{}
+			input := &ctrlmock.AccountInputStub{GetErr: tt.getErr}
 			ctrl := NewAccountController(
 				func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort {
 					input.Output = output
@@ -93,9 +104,7 @@ func TestAccountController_GetCurrent(t *testing.T) {
 			c := e.NewContext(req, rec)
 
 			_ = ctrl.GetCurrent(c)
-			if rec.Code != tt.wantStatus {
-				t.Fatalf("status = %d, want %d", rec.Code, tt.wantStatus)
-			}
+			assertStatusBody(t, rec, tt.wantStatus, tt.wantBody)
 		})
 	}
 }
@@ -105,9 +114,10 @@ func TestAccountController_GetByID(t *testing.T) {
 		name       string
 		getErr     error
 		wantStatus int
+		wantBody   string
 	}{
 		{name: "[Success] get by id", wantStatus: http.StatusOK},
-		{name: "[Fail] not found", getErr: domainerr.ErrNotFound, wantStatus: http.StatusNotFound},
+		{name: "[Fail] not found", getErr: domainerr.ErrNotFound, wantStatus: http.StatusNotFound, wantBody: domainerr.ErrNotFound.Error()},
 	}
 
 	for _, tt := range tests {
@@ -129,9 +139,7 @@ func TestAccountController_GetByID(t *testing.T) {
 			c := e.NewContext(req, rec)
 
 			_ = ctrl.GetByID(c, "acc-1")
-			if rec.Code != tt.wantStatus {
-				t.Fatalf("status = %d, want %d", rec.Code, tt.wantStatus)
-			}
+			assertStatusBody(t, rec, tt.wantStatus, tt.wantBody)
 		})
 	}
 }
