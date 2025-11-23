@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -49,7 +50,7 @@ func BuildServer(ctx context.Context) (*echo.Echo, func(), error) {
 
 	// Allow frontend (localhost:3000) to call the API during development.
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000", "http://127.0.0.1:3000"},
+		AllowOrigins: allowedOrigins(),
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.PATCH, echo.OPTIONS},
 		AllowHeaders: []string{
 			echo.HeaderOrigin,
@@ -66,4 +67,22 @@ func BuildServer(ctx context.Context) (*echo.Echo, func(), error) {
 	openapi.RegisterHandlers(e, server)
 
 	return e, cleanup, nil
+}
+
+func allowedOrigins() []string {
+	fromEnv := os.Getenv("CLIENT_ORIGIN")
+	if strings.TrimSpace(fromEnv) == "" {
+		return []string{"http://localhost:3000", "http://127.0.0.1:3000"}
+	}
+	parts := strings.Split(fromEnv, ",")
+	origins := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			origins = append(origins, trimmed)
+		}
+	}
+	if len(origins) == 0 {
+		return []string{"http://localhost:3000", "http://127.0.0.1:3000"}
+	}
+	return origins
 }
