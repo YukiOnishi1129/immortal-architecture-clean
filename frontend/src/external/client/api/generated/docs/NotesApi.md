@@ -106,7 +106,7 @@ async function example() {
   const body = {
     // string
     noteId: noteId_example,
-    // string | 所有者IDフィルター
+    // string | 所有者ID（権限チェック用）
     ownerId: ownerId_example,
   } satisfies NotesDeleteNoteRequest;
 
@@ -128,7 +128,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **noteId** | `string` |  | [Defaults to `undefined`] |
-| **ownerId** | `string` | 所有者IDフィルター | [Defaults to `undefined`] |
+| **ownerId** | `string` | 所有者ID（権限チェック用） | [Defaults to `undefined`] |
 
 ### Return type
 
@@ -464,7 +464,7 @@ async function example() {
   const body = {
     // string
     noteId: noteId_example,
-    // string | 所有者IDフィルター
+    // string | 所有者ID（権限チェック用）
     ownerId: ownerId_example,
     // ModelsUpdateNoteRequest
     modelsUpdateNoteRequest: ...,
@@ -488,7 +488,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **noteId** | `string` |  | [Defaults to `undefined`] |
-| **ownerId** | `string` | 所有者IDフィルター | [Defaults to `undefined`] |
+| **ownerId** | `string` | 所有者ID（権限チェック用） | [Defaults to `undefined`] |
 | **modelsUpdateNoteRequest** | [ModelsUpdateNoteRequest](ModelsUpdateNoteRequest.md) |  | |
 
 ### Return type

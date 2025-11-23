@@ -16,7 +16,7 @@ model Field {
   label: string;
 
   /** 表示順序 */
-  @minValue(0)
+  @minValue(1)
   order: int32;
 
   /** 必須フラグ */
@@ -30,7 +30,7 @@ model CreateFieldRequest {
   label: string;
 
   /** 表示順序 */
-  @minValue(0)
+  @minValue(1)
   order: int32;
 
   /** 必須フラグ */
@@ -76,7 +76,7 @@ model UpdateFieldRequest {
   label: string;
 
   /** 表示順序 */
-  @minValue(0)
+  @minValue(1)
   order: int32;
 
   /** 必須フラグ */

@@ -407,13 +407,13 @@ type NotesListNotesParams struct {
 
 // NotesDeleteNoteParams defines parameters for NotesDeleteNote.
 type NotesDeleteNoteParams struct {
-	// OwnerId 所有者IDフィルター
+	// OwnerId 所有者ID（権限チェック用）
 	OwnerId string `form:"ownerId" json:"ownerId"`
 }
 
 // NotesUpdateNoteParams defines parameters for NotesUpdateNote.
 type NotesUpdateNoteParams struct {
-	// OwnerId 所有者IDフィルター
+	// OwnerId 所有者ID（権限チェック用）
 	OwnerId string `form:"ownerId" json:"ownerId"`
 }
 
@@ -440,13 +440,11 @@ type TemplatesListTemplatesParams struct {
 
 // TemplatesDeleteTemplateParams defines parameters for TemplatesDeleteTemplate.
 type TemplatesDeleteTemplateParams struct {
-	// OwnerId 所有者IDフィルター
 	OwnerId string `form:"ownerId" json:"ownerId"`
 }
 
 // TemplatesUpdateTemplateParams defines parameters for TemplatesUpdateTemplate.
 type TemplatesUpdateTemplateParams struct {
-	// OwnerId 所有者IDフィルター
 	OwnerId string `form:"ownerId" json:"ownerId"`
 }
 

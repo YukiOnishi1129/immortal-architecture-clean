@@ -203,7 +203,7 @@ paths:
         - name: ownerId
           in: query
           required: true
-          description: 所有者IDフィルター
+          description: 所有者ID（権限チェック用）
           schema:
             type: string
           explode: false
@@ -245,7 +245,7 @@ paths:
         - name: ownerId
           in: query
           required: true
-          description: 所有者IDフィルター
+          description: 所有者ID（権限チェック用）
           schema:
             type: string
           explode: false
@@ -447,7 +447,6 @@ paths:
         - name: ownerId
           in: query
           required: true
-          description: 所有者IDフィルター
           schema:
             type: string
           explode: false
@@ -489,7 +488,6 @@ paths:
         - name: ownerId
           in: query
           required: true
-          description: 所有者IDフィルター
           schema:
             type: string
           explode: false
@@ -648,7 +646,7 @@ components:
         order:
           type: integer
           format: int32
-          minimum: 0
+          minimum: 1
           description: 表示順序
         isRequired:
           type: boolean
@@ -772,7 +770,7 @@ components:
         order:
           type: integer
           format: int32
-          minimum: 0
+          minimum: 1
           description: 表示順序
         isRequired:
           type: boolean
@@ -978,7 +976,7 @@ components:
         order:
           type: integer
           format: int32
-          minimum: 0
+          minimum: 1
           description: 表示順序
         isRequired:
           type: boolean

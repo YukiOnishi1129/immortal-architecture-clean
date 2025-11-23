@@ -7,7 +7,7 @@
 | **画面ID** | **パス** | **画面名** | **役割** | **主な操作** |
 |-----------|---------|----------|---------|-------------|
 | **AUTH-LOGIN** | /login | ログイン | Guest | 「Googleでログイン」→ 認証成功で/notesへ |
-| **AC-ME** | /me/notes?status=&q=&page= | マイノート一覧 | Account | 自分のノート一覧表示／検索・絞込（status=draft\|publish, q=キーワード, page）<br>ノート詳細へ／新規作成へ／ログアウト |
+| **AC-ME** | /my-notes?status=&q=&page= | マイノート一覧 | Account | 自分のノート一覧表示／検索・絞込（status=draft\|publish, q=キーワード, page）<br>ノート詳細へ／新規作成へ／ログアウト |
 
 ### 📝 Note（固定フォーマット）
 
@@ -33,10 +33,10 @@
 - **サイドバー（固定表示）**：
   - 🗒️ **Notes** → /notes（ノート一覧）
   - 🧩 **Templates** → /templates（テンプレート一覧）
-  - 🏠 **My Notes** → /me/notes（自分のノート一覧）
+  - 🏠 **My Notes** → /my-notes（自分のノート一覧）
 - **右上ユーザーメニュー（ログイン中のみ表示）**：
   - プロフィールアイコンをクリックでドロップダウン表示
-    - **My Notes** → /me/notes（ショートカット）
+    - **My Notes** → /my-notes（ショートカット）
     - **Logout** → /login（ログアウト後リダイレクト）
 - **未ログイン（Guest）時**：
   - サイドバー非表示
