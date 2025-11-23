@@ -9,7 +9,7 @@
 - **Domain（Entity/Logic）**: 外部依存なし。純粋関数を直接テスト。境界値・不変条件を重点。
 - **UseCase**: Ports を gomock でモック。リポジトリ/TxManager/OutputPort などの呼び出し順・引数を確認。副作用の有無と戻り値を検証。
 - **Adapter (Gateway/Controller/Presenter)**:
-  - Gateway: SQLC クエリはモック化し、入力/出力マッピングを確認（ドメイン型への詰め替え含む）。
+  - Gateway: 今回は「ユニットのみ」。SQLC/pgx をモック化し、入力/出力マッピングを確認（ドメイン型への詰め替え・ErrNoRows→ErrNotFound 変換など）。テストDBを使った統合テストは一旦実施しない。
   - Controller: Echo の Context は最小のフェイク/モックで Bind/JSON 応答を確認（Body 変換・パラメータ検証・ステータスコード）。
   - Presenter: ドメイン→OpenAPI DTO への変換を検証（フィールド欠落・ゼロ値の扱い）。
 - **Driver/Initializer**: 依存組み立てのみ。ユニットテスト対象外（統合テストで確認）。
@@ -42,6 +42,7 @@
 
 ## モック生成のメモ
 - Port/Repository/TxManager/OutputPort は `mockgen` で生成し `internal/mock/` 配下に置く想定（例: `mock_port`, `mock_usecase`）。
+- Gateway用: SQLC が期待する `DBTX` をモック化するか、Queries に薄いインターフェースを挟んで `mockgen` を当てる（実DBは使わない方針）。
 - 生成コマンド例（参考）:
   - `mockgen -source=internal/port/note_port.go -destination=internal/mock/port/mock_note_port.go -package=portmock`
   - `mockgen -source=internal/port/tx_port.go -destination=internal/mock/port/mock_tx_port.go -package=portmock`
