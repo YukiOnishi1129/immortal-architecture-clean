@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
 import { getNoteByIdQuery } from "@/external/handler/note/note.query.server";
 
-interface LayoutProps {
-  children: React.ReactNode;
-  params: Promise<{ id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
-
 export async function generateMetadata({
   params,
-}: LayoutProps): Promise<Metadata> {
+}: LayoutProps<"/notes/[id]/edit">): Promise<Metadata> {
   const { id } = await params;
   const note = await getNoteByIdQuery(id);
 
@@ -21,6 +15,8 @@ export async function generateMetadata({
   };
 }
 
-export default function NoteEditRedirectLayout({ children }: LayoutProps) {
+export default function NoteEditRedirectLayout({
+  children,
+}: LayoutProps<"/notes/[id]/edit">) {
   return <>{children}</>;
 }
