@@ -73,10 +73,15 @@ func toTemplateResponse(t template.WithUsage) openapi.ModelsTemplateResponse {
 		})
 	}
 	return openapi.ModelsTemplateResponse{
-		Id:        t.Template.ID,
-		Name:      t.Template.Name,
-		OwnerId:   t.Template.OwnerID,
-		Owner:     openapi.ModelsAccountSummary{Id: t.Template.OwnerID},
+		Id:      t.Template.ID,
+		Name:    t.Template.Name,
+		OwnerId: t.Template.OwnerID,
+		Owner: openapi.ModelsAccountSummary{
+			Id:        t.Owner.ID,
+			FirstName: t.Owner.FirstName,
+			LastName:  t.Owner.LastName,
+			Thumbnail: t.Owner.Thumbnail,
+		},
 		Fields:    fields,
 		IsUsed:    t.IsUsed,
 		UpdatedAt: t.Template.UpdatedAt,

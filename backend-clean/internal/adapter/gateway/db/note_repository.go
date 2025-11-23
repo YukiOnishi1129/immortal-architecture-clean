@@ -62,6 +62,11 @@ func (r *NoteRepository) List(ctx context.Context, filters note.Filters) ([]note
 		if err != nil {
 			return nil, err
 		}
+		var thumbnail *string
+		if row.OwnerThumbnail.Valid {
+			s := row.OwnerThumbnail.String
+			thumbnail = &s
+		}
 		result = append(result, note.WithMeta{
 			Note: note.Note{
 				ID:         uuidToString(row.ID),
@@ -72,9 +77,11 @@ func (r *NoteRepository) List(ctx context.Context, filters note.Filters) ([]note
 				CreatedAt:  timestamptzToTime(row.CreatedAt),
 				UpdatedAt:  timestamptzToTime(row.UpdatedAt),
 			},
-			TemplateName:  row.TemplateName,
-			OwnerFullName: row.FirstName + " " + row.LastName,
-			Sections:      sections,
+			TemplateName:   row.TemplateName,
+			OwnerFirstName: row.FirstName,
+			OwnerLastName:  row.LastName,
+			OwnerThumbnail: thumbnail,
+			Sections:       sections,
 		})
 	}
 	return result, nil
@@ -97,6 +104,11 @@ func (r *NoteRepository) Get(ctx context.Context, id string) (*note.WithMeta, er
 	if err != nil {
 		return nil, err
 	}
+	var thumbnail *string
+	if row.OwnerThumbnail.Valid {
+		s := row.OwnerThumbnail.String
+		thumbnail = &s
+	}
 	return &note.WithMeta{
 		Note: note.Note{
 			ID:         uuidToString(row.ID),
@@ -107,9 +119,11 @@ func (r *NoteRepository) Get(ctx context.Context, id string) (*note.WithMeta, er
 			CreatedAt:  timestamptzToTime(row.CreatedAt),
 			UpdatedAt:  timestamptzToTime(row.UpdatedAt),
 		},
-		TemplateName:  row.TemplateName,
-		OwnerFullName: row.FirstName + " " + row.LastName,
-		Sections:      sections,
+		TemplateName:   row.TemplateName,
+		OwnerFirstName: row.FirstName,
+		OwnerLastName:  row.LastName,
+		OwnerThumbnail: thumbnail,
+		Sections:       sections,
 	}, nil
 }
 

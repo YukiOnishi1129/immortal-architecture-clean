@@ -15,6 +15,20 @@ import (
 	"immortal-architecture-clean/backend/internal/port"
 )
 
+func toTemplateOwner(ownerID pgtype.UUID, first, last string, thumb pgtype.Text) template.Owner {
+	var thumbnail *string
+	if thumb.Valid {
+		s := thumb.String
+		thumbnail = &s
+	}
+	return template.Owner{
+		ID:        uuidToString(ownerID),
+		FirstName: first,
+		LastName:  last,
+		Thumbnail: thumbnail,
+	}
+}
+
 // TemplateRepository implements template persistence.
 type TemplateRepository struct {
 	pool    *pgxpool.Pool
@@ -54,6 +68,7 @@ func (r *TemplateRepository) List(ctx context.Context, filters template.Filters)
 		if err != nil {
 			return nil, err
 		}
+		owner := toTemplateOwner(row.OwnerID, row.OwnerFirstName, row.OwnerLastName, row.OwnerThumbnail)
 		result = append(result, template.WithUsage{
 			Template: template.Template{
 				ID:        uuidToString(row.ID),
@@ -64,6 +79,7 @@ func (r *TemplateRepository) List(ctx context.Context, filters template.Filters)
 			},
 			Fields: fields,
 			IsUsed: row.IsUsed,
+			Owner:  owner,
 		})
 	}
 	return result, nil
@@ -86,6 +102,7 @@ func (r *TemplateRepository) Get(ctx context.Context, id string) (*template.With
 	if err != nil {
 		return nil, err
 	}
+	owner := toTemplateOwner(row.OwnerID, row.OwnerFirstName, row.OwnerLastName, row.OwnerThumbnail)
 	return &template.WithUsage{
 		Template: template.Template{
 			ID:        uuidToString(row.ID),
@@ -96,6 +113,7 @@ func (r *TemplateRepository) Get(ctx context.Context, id string) (*template.With
 		},
 		Fields: fields,
 		IsUsed: row.IsUsed,
+		Owner:  owner,
 	}, nil
 }
 

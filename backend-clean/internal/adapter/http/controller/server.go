@@ -44,8 +44,8 @@ func (s *Server) NotesCreateNote(ctx echo.Context) error {
 }
 
 // NotesDeleteNote handles DELETE /api/notes/:id.
-func (s *Server) NotesDeleteNote(ctx echo.Context, noteId string) error { //nolint:revive
-	return s.note.Delete(ctx, noteId)
+func (s *Server) NotesDeleteNote(ctx echo.Context, noteId string, params openapi.NotesDeleteNoteParams) error { //nolint:revive
+	return s.note.Delete(ctx, noteId, params)
 }
 
 // NotesGetNoteById handles GET /api/notes/:id.
@@ -55,20 +55,20 @@ func (s *Server) NotesGetNoteById(ctx echo.Context, noteId string) error { //nol
 
 // NotesUpdateNote handles PUT /api/notes/:noteId.
 // NotesUpdateNote handles PUT /api/notes/:id.
-func (s *Server) NotesUpdateNote(ctx echo.Context, noteId string) error { //nolint:revive
-	return s.note.Update(ctx, noteId)
+func (s *Server) NotesUpdateNote(ctx echo.Context, noteId string, params openapi.NotesUpdateNoteParams) error { //nolint:revive
+	return s.note.Update(ctx, noteId, params)
 }
 
 // NotesPublishNote handles POST /api/notes/:noteId/publish.
 // NotesPublishNote handles POST /api/notes/:id/publish.
-func (s *Server) NotesPublishNote(ctx echo.Context, noteId string) error { //nolint:revive
-	return s.note.Publish(ctx, noteId)
+func (s *Server) NotesPublishNote(ctx echo.Context, noteId string, params openapi.NotesPublishNoteParams) error { //nolint:revive
+	return s.note.Publish(ctx, noteId, params)
 }
 
 // NotesUnpublishNote handles POST /api/notes/:noteId/unpublish.
 // NotesUnpublishNote handles POST /api/notes/:id/unpublish.
-func (s *Server) NotesUnpublishNote(ctx echo.Context, noteId string) error { //nolint:revive
-	return s.note.Unpublish(ctx, noteId)
+func (s *Server) NotesUnpublishNote(ctx echo.Context, noteId string, params openapi.NotesUnpublishNoteParams) error { //nolint:revive
+	return s.note.Unpublish(ctx, noteId, params)
 }
 
 // TemplatesListTemplates handles GET /api/templates.
@@ -82,8 +82,8 @@ func (s *Server) TemplatesCreateTemplate(ctx echo.Context) error {
 }
 
 // TemplatesDeleteTemplate handles DELETE /api/templates/:id.
-func (s *Server) TemplatesDeleteTemplate(ctx echo.Context, templateId string) error { //nolint:revive
-	return s.template.Delete(ctx, templateId)
+func (s *Server) TemplatesDeleteTemplate(ctx echo.Context, templateId string, params openapi.TemplatesDeleteTemplateParams) error { //nolint:revive
+	return s.template.Delete(ctx, templateId, params)
 }
 
 // TemplatesGetTemplateById handles GET /api/templates/:id.
@@ -93,6 +93,6 @@ func (s *Server) TemplatesGetTemplateById(ctx echo.Context, templateId string) e
 
 // TemplatesUpdateTemplate handles PUT /api/templates/:templateId.
 // TemplatesUpdateTemplate handles PUT /api/templates/:id.
-func (s *Server) TemplatesUpdateTemplate(ctx echo.Context, templateId string) error { //nolint:revive
-	return s.template.Update(ctx, templateId)
+func (s *Server) TemplatesUpdateTemplate(ctx echo.Context, templateId string, params openapi.TemplatesUpdateTemplateParams) error { //nolint:revive
+	return s.template.Update(ctx, templateId, params)
 }

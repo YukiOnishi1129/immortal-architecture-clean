@@ -49,6 +49,8 @@ interface Notes {
   @summary("Update note")
   updateNote(
     @path noteId: string,
+    /** 所有者ID（権限チェック用） */
+    @query ownerId: string,
     @body request: UpdateNoteRequest
   ): NoteResponse | NotFoundError | ForbiddenError | BadRequestError | UnauthorizedError;
 
@@ -57,7 +59,9 @@ interface Notes {
   @route("/{noteId}/publish")
   @summary("Publish note")
   publishNote(
-    @path noteId: string
+    @path noteId: string,
+    /** 所有者ID（公開権限チェック用） */
+    @query ownerId: string
   ): NoteResponse | NotFoundError | ForbiddenError | BadRequestError | UnauthorizedError;
 
   /** ノート公開取り消し */
@@ -65,7 +69,9 @@ interface Notes {
   @route("/{noteId}/unpublish")
   @summary("Unpublish note")
   unpublishNote(
-    @path noteId: string
+    @path noteId: string,
+    /** 所有者ID（公開権限チェック用） */
+    @query ownerId: string
   ): NoteResponse | NotFoundError | ForbiddenError | BadRequestError | UnauthorizedError;
 
   /** ノート削除 */
@@ -73,6 +79,8 @@ interface Notes {
   @route("/{noteId}")
   @summary("Delete note")
   deleteNote(
-    @path noteId: string
+    @path noteId: string,
+    /** 所有者ID（権限チェック用） */
+    @query ownerId: string
   ): SuccessResponse | NotFoundError | ForbiddenError | UnauthorizedError;
 }

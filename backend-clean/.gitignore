@@ -3,5 +3,4 @@
 .env
 .tools
 migrate
-/api
 main

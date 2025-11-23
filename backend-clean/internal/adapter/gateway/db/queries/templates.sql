@@ -1,6 +1,9 @@
 -- name: ListTemplates :many
 SELECT
     t.*,
+    a.first_name AS owner_first_name,
+    a.last_name AS owner_last_name,
+    a.thumbnail AS owner_thumbnail,
     EXISTS (
         SELECT 1
         FROM notes n
@@ -8,6 +11,7 @@ SELECT
         LIMIT 1
     ) AS is_used
 FROM templates t
+JOIN accounts a ON a.id = t.owner_id
 WHERE ($1::uuid IS NULL OR t.owner_id = $1)
   AND ($2::text IS NULL OR t.name ILIKE '%' || $2 || '%')
 ORDER BY t.updated_at DESC;
@@ -15,6 +19,9 @@ ORDER BY t.updated_at DESC;
 -- name: GetTemplateByID :one
 SELECT
     t.*,
+    a.first_name AS owner_first_name,
+    a.last_name AS owner_last_name,
+    a.thumbnail AS owner_thumbnail,
     EXISTS (
         SELECT 1
         FROM notes n
@@ -22,6 +29,7 @@ SELECT
         LIMIT 1
     ) AS is_used
 FROM templates t
+JOIN accounts a ON a.id = t.owner_id
 WHERE t.id = $1;
 
 -- name: CreateTemplate :one

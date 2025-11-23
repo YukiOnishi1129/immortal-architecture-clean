@@ -53,9 +53,9 @@ export async function updateTemplateCommand(id: string, request: unknown) {
 }
 
 export async function deleteTemplateCommand(id: string) {
-  await getAuthenticatedSessionServer();
+  const session = await getAuthenticatedSessionServer();
 
   // Delete template
-  await templateService.deleteTemplate(id);
+  await templateService.deleteTemplate(id, session.account.id);
   return { success: true };
 }

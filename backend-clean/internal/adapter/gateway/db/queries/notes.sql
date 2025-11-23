@@ -3,7 +3,8 @@ SELECT
     n.*,
     t.name AS template_name,
     a.first_name,
-    a.last_name
+    a.last_name,
+    a.thumbnail AS owner_thumbnail
 FROM notes n
 JOIN templates t ON t.id = n.template_id
 JOIN accounts a ON a.id = n.owner_id
@@ -18,7 +19,8 @@ SELECT
     n.*,
     t.name AS template_name,
     a.first_name,
-    a.last_name
+    a.last_name,
+    a.thumbnail AS owner_thumbnail
 FROM notes n
 JOIN templates t ON t.id = n.template_id
 JOIN accounts a ON a.id = n.owner_id

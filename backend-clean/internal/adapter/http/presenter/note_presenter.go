@@ -80,8 +80,9 @@ func toNoteResponse(n note.WithMeta) openapi.ModelsNoteResponse {
 		OwnerId:      n.Note.OwnerID,
 		Owner: openapi.ModelsAccountSummary{
 			Id:        n.Note.OwnerID,
-			FirstName: "",
-			LastName:  "",
+			FirstName: n.OwnerFirstName,
+			LastName:  n.OwnerLastName,
+			Thumbnail: n.OwnerThumbnail,
 		},
 		Status:    openapi.ModelsNoteStatus(n.Note.Status),
 		Sections:  sections,

@@ -55,6 +55,7 @@ export interface NotesCreateNoteRequest {
 
 export interface NotesDeleteNoteRequest {
     noteId: string;
+    ownerId: string;
 }
 
 export interface NotesGetNoteByIdRequest {
@@ -70,14 +71,17 @@ export interface NotesListNotesRequest {
 
 export interface NotesPublishNoteRequest {
     noteId: string;
+    ownerId: string;
 }
 
 export interface NotesUnpublishNoteRequest {
     noteId: string;
+    ownerId: string;
 }
 
 export interface NotesUpdateNoteRequest {
     noteId: string;
+    ownerId: string;
     modelsUpdateNoteRequest: ModelsUpdateNoteRequest;
 }
 
@@ -139,7 +143,18 @@ export class NotesApi extends runtime.BaseAPI {
             );
         }
 
+        if (requestParameters['ownerId'] == null) {
+            throw new runtime.RequiredError(
+                'ownerId',
+                'Required parameter "ownerId" was null or undefined when calling notesDeleteNote().'
+            );
+        }
+
         const queryParameters: any = {};
+
+        if (requestParameters['ownerId'] != null) {
+            queryParameters['ownerId'] = requestParameters['ownerId'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -264,7 +279,18 @@ export class NotesApi extends runtime.BaseAPI {
             );
         }
 
+        if (requestParameters['ownerId'] == null) {
+            throw new runtime.RequiredError(
+                'ownerId',
+                'Required parameter "ownerId" was null or undefined when calling notesPublishNote().'
+            );
+        }
+
         const queryParameters: any = {};
+
+        if (requestParameters['ownerId'] != null) {
+            queryParameters['ownerId'] = requestParameters['ownerId'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -303,7 +329,18 @@ export class NotesApi extends runtime.BaseAPI {
             );
         }
 
+        if (requestParameters['ownerId'] == null) {
+            throw new runtime.RequiredError(
+                'ownerId',
+                'Required parameter "ownerId" was null or undefined when calling notesUnpublishNote().'
+            );
+        }
+
         const queryParameters: any = {};
+
+        if (requestParameters['ownerId'] != null) {
+            queryParameters['ownerId'] = requestParameters['ownerId'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -342,6 +379,13 @@ export class NotesApi extends runtime.BaseAPI {
             );
         }
 
+        if (requestParameters['ownerId'] == null) {
+            throw new runtime.RequiredError(
+                'ownerId',
+                'Required parameter "ownerId" was null or undefined when calling notesUpdateNote().'
+            );
+        }
+
         if (requestParameters['modelsUpdateNoteRequest'] == null) {
             throw new runtime.RequiredError(
                 'modelsUpdateNoteRequest',
@@ -350,6 +394,10 @@ export class NotesApi extends runtime.BaseAPI {
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters['ownerId'] != null) {
+            queryParameters['ownerId'] = requestParameters['ownerId'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 

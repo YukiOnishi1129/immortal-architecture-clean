@@ -200,6 +200,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: ownerId
+          in: query
+          required: true
+          description: 所有者IDフィルター
+          schema:
+            type: string
+          explode: false
       responses:
         '200':
           description: The request has succeeded.
@@ -235,6 +242,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: ownerId
+          in: query
+          required: true
+          description: 所有者IDフィルター
+          schema:
+            type: string
+          explode: false
       responses:
         '200':
           description: The request has succeeded.
@@ -264,6 +278,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: ownerId
+          in: query
+          required: true
+          description: 所有者ID（公開権限チェック用）
+          schema:
+            type: string
+          explode: false
       responses:
         '200':
           description: The request has succeeded.
@@ -294,6 +315,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: ownerId
+          in: query
+          required: true
+          description: 所有者ID（公開権限チェック用）
+          schema:
+            type: string
+          explode: false
       responses:
         '200':
           description: The request has succeeded.
@@ -416,6 +444,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: ownerId
+          in: query
+          required: true
+          description: 所有者IDフィルター
+          schema:
+            type: string
+          explode: false
       responses:
         '200':
           description: The request has succeeded.
@@ -451,6 +486,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: ownerId
+          in: query
+          required: true
+          description: 所有者IDフィルター
+          schema:
+            type: string
+          explode: false
       responses:
         '200':
           description: The request has succeeded.

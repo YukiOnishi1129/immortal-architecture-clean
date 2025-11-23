@@ -19,8 +19,10 @@ type SectionWithField struct {
 
 // WithMeta represents a note with template metadata.
 type WithMeta struct {
-	Note          Note
-	TemplateName  string
-	OwnerFullName string
-	Sections      []SectionWithField
+	Note           Note
+	TemplateName   string
+	OwnerFirstName string
+	OwnerLastName  string
+	OwnerThumbnail *string
+	Sections       []SectionWithField
 }

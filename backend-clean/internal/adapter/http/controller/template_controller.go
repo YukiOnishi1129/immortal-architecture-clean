@@ -78,8 +78,8 @@ func (c *TemplateController) Create(ctx echo.Context) error {
 }
 
 // Delete handles DELETE /templates/:id.
-func (c *TemplateController) Delete(ctx echo.Context, templateID string) error {
-	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
+func (c *TemplateController) Delete(ctx echo.Context, templateID string, params openapi.TemplatesDeleteTemplateParams) error {
+	ownerID := strings.TrimSpace(params.OwnerId)
 	if ownerID == "" {
 		return handleError(ctx, domainerr.ErrUnauthorized)
 	}
@@ -100,12 +100,12 @@ func (c *TemplateController) GetByID(ctx echo.Context, templateID string) error 
 }
 
 // Update handles PUT /templates/:id.
-func (c *TemplateController) Update(ctx echo.Context, templateID string) error {
+func (c *TemplateController) Update(ctx echo.Context, templateID string, params openapi.TemplatesUpdateTemplateParams) error {
 	var body openapi.ModelsUpdateTemplateRequest
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.JSON(http.StatusBadRequest, openapi.ModelsBadRequestError{Code: openapi.ModelsBadRequestErrorCodeBADREQUEST, Message: "invalid body"})
 	}
-	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
+	ownerID := strings.TrimSpace(params.OwnerId)
 	if ownerID == "" {
 		return handleError(ctx, domainerr.ErrUnauthorized)
 	}

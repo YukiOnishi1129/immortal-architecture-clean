@@ -93,8 +93,8 @@ func (c *NoteController) Create(ctx echo.Context) error {
 
 // Delete handles deleting a note.
 // Delete handles DELETE /notes/:id.
-func (c *NoteController) Delete(ctx echo.Context, noteID string) error {
-	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
+func (c *NoteController) Delete(ctx echo.Context, noteID string, params openapi.NotesDeleteNoteParams) error {
+	ownerID := strings.TrimSpace(params.OwnerId)
 	if ownerID == "" {
 		return handleError(ctx, domainerr.ErrUnauthorized)
 	}
@@ -116,12 +116,12 @@ func (c *NoteController) GetByID(ctx echo.Context, noteID string) error {
 
 // Update handles updating a note.
 // Update handles PUT /notes/:id.
-func (c *NoteController) Update(ctx echo.Context, noteID string) error {
+func (c *NoteController) Update(ctx echo.Context, noteID string, params openapi.NotesUpdateNoteParams) error {
 	var body openapi.ModelsUpdateNoteRequest
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.JSON(http.StatusBadRequest, openapi.ModelsBadRequestError{Code: openapi.ModelsBadRequestErrorCodeBADREQUEST, Message: "invalid body"})
 	}
-	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
+	ownerID := strings.TrimSpace(params.OwnerId)
 	if ownerID == "" {
 		return handleError(ctx, domainerr.ErrUnauthorized)
 	}
@@ -147,10 +147,10 @@ func (c *NoteController) Update(ctx echo.Context, noteID string) error {
 
 // Publish handles publishing a note.
 // Publish handles POST /notes/:id/publish.
-func (c *NoteController) Publish(ctx echo.Context, noteID string) error {
-	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
+func (c *NoteController) Publish(ctx echo.Context, noteID string, params openapi.NotesPublishNoteParams) error {
+	ownerID := strings.TrimSpace(params.OwnerId)
 	if ownerID == "" {
-		return handleError(ctx, domainerr.ErrUnauthorized)
+		return handleError(ctx, domainerr.ErrOwnerRequired)
 	}
 	input, p := c.newIO()
 	err := input.ChangeStatus(ctx.Request().Context(), port.NoteStatusChangeInput{
@@ -166,10 +166,10 @@ func (c *NoteController) Publish(ctx echo.Context, noteID string) error {
 
 // Unpublish handles unpublishing a note.
 // Unpublish handles POST /notes/:id/unpublish.
-func (c *NoteController) Unpublish(ctx echo.Context, noteID string) error {
-	ownerID := strings.TrimSpace(ctx.QueryParam("ownerId"))
+func (c *NoteController) Unpublish(ctx echo.Context, noteID string, params openapi.NotesUnpublishNoteParams) error {
+	ownerID := strings.TrimSpace(params.OwnerId)
 	if ownerID == "" {
-		return handleError(ctx, domainerr.ErrUnauthorized)
+		return handleError(ctx, domainerr.ErrOwnerRequired)
 	}
 	input, p := c.newIO()
 	err := input.ChangeStatus(ctx.Request().Context(), port.NoteStatusChangeInput{

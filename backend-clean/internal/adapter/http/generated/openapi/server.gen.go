@@ -405,6 +405,30 @@ type NotesListNotesParams struct {
 	OwnerId *string `form:"ownerId,omitempty" json:"ownerId,omitempty"`
 }
 
+// NotesDeleteNoteParams defines parameters for NotesDeleteNote.
+type NotesDeleteNoteParams struct {
+	// OwnerId 所有者IDフィルター
+	OwnerId string `form:"ownerId" json:"ownerId"`
+}
+
+// NotesUpdateNoteParams defines parameters for NotesUpdateNote.
+type NotesUpdateNoteParams struct {
+	// OwnerId 所有者IDフィルター
+	OwnerId string `form:"ownerId" json:"ownerId"`
+}
+
+// NotesPublishNoteParams defines parameters for NotesPublishNote.
+type NotesPublishNoteParams struct {
+	// OwnerId 所有者ID（公開権限チェック用）
+	OwnerId string `form:"ownerId" json:"ownerId"`
+}
+
+// NotesUnpublishNoteParams defines parameters for NotesUnpublishNote.
+type NotesUnpublishNoteParams struct {
+	// OwnerId 所有者ID（公開権限チェック用）
+	OwnerId string `form:"ownerId" json:"ownerId"`
+}
+
 // TemplatesListTemplatesParams defines parameters for TemplatesListTemplates.
 type TemplatesListTemplatesParams struct {
 	// Q テンプレート名のキーワード検索
@@ -412,6 +436,18 @@ type TemplatesListTemplatesParams struct {
 
 	// OwnerId 所有者IDフィルター
 	OwnerId *string `form:"ownerId,omitempty" json:"ownerId,omitempty"`
+}
+
+// TemplatesDeleteTemplateParams defines parameters for TemplatesDeleteTemplate.
+type TemplatesDeleteTemplateParams struct {
+	// OwnerId 所有者IDフィルター
+	OwnerId string `form:"ownerId" json:"ownerId"`
+}
+
+// TemplatesUpdateTemplateParams defines parameters for TemplatesUpdateTemplate.
+type TemplatesUpdateTemplateParams struct {
+	// OwnerId 所有者IDフィルター
+	OwnerId string `form:"ownerId" json:"ownerId"`
 }
 
 // AccountsCreateOrGetAccountJSONRequestBody defines body for AccountsCreateOrGetAccount for application/json ContentType.
@@ -448,19 +484,19 @@ type ServerInterface interface {
 	NotesCreateNote(ctx echo.Context) error
 	// Delete note
 	// (DELETE /api/notes/{noteId})
-	NotesDeleteNote(ctx echo.Context, noteId string) error
+	NotesDeleteNote(ctx echo.Context, noteId string, params NotesDeleteNoteParams) error
 	// Get note by ID
 	// (GET /api/notes/{noteId})
 	NotesGetNoteById(ctx echo.Context, noteId string) error
 	// Update note
 	// (PUT /api/notes/{noteId})
-	NotesUpdateNote(ctx echo.Context, noteId string) error
+	NotesUpdateNote(ctx echo.Context, noteId string, params NotesUpdateNoteParams) error
 	// Publish note
 	// (POST /api/notes/{noteId}/publish)
-	NotesPublishNote(ctx echo.Context, noteId string) error
+	NotesPublishNote(ctx echo.Context, noteId string, params NotesPublishNoteParams) error
 	// Unpublish note
 	// (POST /api/notes/{noteId}/unpublish)
-	NotesUnpublishNote(ctx echo.Context, noteId string) error
+	NotesUnpublishNote(ctx echo.Context, noteId string, params NotesUnpublishNoteParams) error
 	// Get templates list
 	// (GET /api/templates)
 	TemplatesListTemplates(ctx echo.Context, params TemplatesListTemplatesParams) error
@@ -469,13 +505,13 @@ type ServerInterface interface {
 	TemplatesCreateTemplate(ctx echo.Context) error
 	// Delete template
 	// (DELETE /api/templates/{templateId})
-	TemplatesDeleteTemplate(ctx echo.Context, templateId string) error
+	TemplatesDeleteTemplate(ctx echo.Context, templateId string, params TemplatesDeleteTemplateParams) error
 	// Get template by ID
 	// (GET /api/templates/{templateId})
 	TemplatesGetTemplateById(ctx echo.Context, templateId string) error
 	// Update template
 	// (PUT /api/templates/{templateId})
-	TemplatesUpdateTemplate(ctx echo.Context, templateId string) error
+	TemplatesUpdateTemplate(ctx echo.Context, templateId string, params TemplatesUpdateTemplateParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -576,8 +612,17 @@ func (w *ServerInterfaceWrapper) NotesDeleteNote(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter noteId: %s", err))
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params NotesDeleteNoteParams
+	// ------------- Required query parameter "ownerId" -------------
+
+	err = runtime.BindQueryParameter("form", false, true, "ownerId", ctx.QueryParams(), &params.OwnerId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ownerId: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.NotesDeleteNote(ctx, noteId)
+	err = w.Handler.NotesDeleteNote(ctx, noteId, params)
 	return err
 }
 
@@ -608,8 +653,17 @@ func (w *ServerInterfaceWrapper) NotesUpdateNote(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter noteId: %s", err))
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params NotesUpdateNoteParams
+	// ------------- Required query parameter "ownerId" -------------
+
+	err = runtime.BindQueryParameter("form", false, true, "ownerId", ctx.QueryParams(), &params.OwnerId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ownerId: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.NotesUpdateNote(ctx, noteId)
+	err = w.Handler.NotesUpdateNote(ctx, noteId, params)
 	return err
 }
 
@@ -624,8 +678,17 @@ func (w *ServerInterfaceWrapper) NotesPublishNote(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter noteId: %s", err))
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params NotesPublishNoteParams
+	// ------------- Required query parameter "ownerId" -------------
+
+	err = runtime.BindQueryParameter("form", false, true, "ownerId", ctx.QueryParams(), &params.OwnerId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ownerId: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.NotesPublishNote(ctx, noteId)
+	err = w.Handler.NotesPublishNote(ctx, noteId, params)
 	return err
 }
 
@@ -640,8 +703,17 @@ func (w *ServerInterfaceWrapper) NotesUnpublishNote(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter noteId: %s", err))
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params NotesUnpublishNoteParams
+	// ------------- Required query parameter "ownerId" -------------
+
+	err = runtime.BindQueryParameter("form", false, true, "ownerId", ctx.QueryParams(), &params.OwnerId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ownerId: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.NotesUnpublishNote(ctx, noteId)
+	err = w.Handler.NotesUnpublishNote(ctx, noteId, params)
 	return err
 }
 
@@ -690,8 +762,17 @@ func (w *ServerInterfaceWrapper) TemplatesDeleteTemplate(ctx echo.Context) error
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter templateId: %s", err))
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params TemplatesDeleteTemplateParams
+	// ------------- Required query parameter "ownerId" -------------
+
+	err = runtime.BindQueryParameter("form", false, true, "ownerId", ctx.QueryParams(), &params.OwnerId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ownerId: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.TemplatesDeleteTemplate(ctx, templateId)
+	err = w.Handler.TemplatesDeleteTemplate(ctx, templateId, params)
 	return err
 }
 
@@ -722,8 +803,17 @@ func (w *ServerInterfaceWrapper) TemplatesUpdateTemplate(ctx echo.Context) error
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter templateId: %s", err))
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params TemplatesUpdateTemplateParams
+	// ------------- Required query parameter "ownerId" -------------
+
+	err = runtime.BindQueryParameter("form", false, true, "ownerId", ctx.QueryParams(), &params.OwnerId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter ownerId: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.TemplatesUpdateTemplate(ctx, templateId)
+	err = w.Handler.TemplatesUpdateTemplate(ctx, templateId, params)
 	return err
 }
 

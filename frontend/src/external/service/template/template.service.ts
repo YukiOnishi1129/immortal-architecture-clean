@@ -79,11 +79,12 @@ export class TemplateService {
 
   async updateTemplate(
     id: string,
-    _ownerId: string,
+    ownerId: string,
     input: UpdateTemplateRequest,
   ): Promise<TemplateResponse> {
     const template = await this.api.templatesUpdateTemplate({
       templateId: id,
+      ownerId,
       modelsUpdateTemplateRequest: {
         id,
         name: input.name,
@@ -98,8 +99,8 @@ export class TemplateService {
     return toTemplateResponse(template);
   }
 
-  async deleteTemplate(id: string): Promise<void> {
-    await this.api.templatesDeleteTemplate({ templateId: id });
+  async deleteTemplate(id: string, ownerId: string): Promise<void> {
+    await this.api.templatesDeleteTemplate({ templateId: id, ownerId });
   }
 }
 

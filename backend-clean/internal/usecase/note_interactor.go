@@ -216,16 +216,22 @@ func buildSectionsForUpdate(existing []note.SectionWithField, templateFields []t
 	for _, s := range existing {
 		fieldBySection[s.Section.ID] = s.Section.FieldID
 	}
-	converted := make([]port.SectionInput, 0, len(inputs))
+	sections := make([]note.Section, 0, len(inputs))
 	for _, in := range inputs {
 		fieldID, ok := fieldBySection[in.SectionID]
 		if !ok {
 			return nil, domainerr.ErrSectionsMissing
 		}
-		converted = append(converted, port.SectionInput{
+		sections = append(sections, note.Section{
+			ID:      in.SectionID,
 			FieldID: fieldID,
+			NoteID:  noteID,
 			Content: in.Content,
 		})
 	}
-	return buildSections(noteID, templateFields, converted), nil
+	// Validate against template fields (reuse existing builder to check missing fields)
+	if err := note.ValidateSections(templateFields, sections); err != nil {
+		return nil, err
+	}
+	return sections, nil
 }
