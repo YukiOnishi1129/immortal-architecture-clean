@@ -51,4 +51,14 @@
 - テスト実行: `GOCACHE=/tmp/gocache go test ./internal/...`
 - CI: lint/test のみ（DB を使わないため追加セットアップ不要）
 
+## gomock 配置ルールと残タスク
+- モックはレイヤー配下に置く: 例 `internal/usecase/mock/*`（パッケージ名は `mockusecase` など衝突しないものに統一）。
+- Controller/Gateway用のモックが必要な場合は、EchoやSQLCクエリに薄いインターフェースを定義してそこに対して `mockgen` を当てる。
+- テストケース名は `[Success] ...` / `[Fail] ...` を先頭に付けて正常/異常を明示する。
+- 進め方（残りの主なタスク）:
+  - Domain: 新規ドメインが増えたら logic/aggregate/service を同様にテーブル駆動で追加。
+  - UseCase: NoteInteractor/AccountInteractor に gomock テストを追加（正常・バリデーションNG・リポジトリエラー・Txエラー）。
+  - Gateway: SQLCクエリをモックし、DB行→ドメイン変換と ErrNoRows→ErrNotFound の変換を検証。
+  - Controller: Bind失敗/ownerId不足/UseCaseエラー→HTTPコードのマッピングを確認するフェイク Echo Context テストを追加。
+
 この方針に沿って各レイヤーのユニットテストを追加していきます。
