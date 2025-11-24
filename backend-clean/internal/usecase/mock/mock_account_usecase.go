@@ -58,6 +58,19 @@ func (mr *MockAccountRepositoryMockRecorder) GetByID(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockAccountRepository)(nil).GetByID), ctx, id)
 }
 
+func (m *MockAccountRepository) GetByEmail(ctx context.Context, email string) (*account.Account, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByEmail", ctx, email)
+	res0, _ := ret[0].(*account.Account)
+	res1, _ := ret[1].(error)
+	return res0, res1
+}
+
+func (mr *MockAccountRepositoryMockRecorder) GetByEmail(ctx, email any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockAccountRepository)(nil).GetByEmail), ctx, email)
+}
+
 // MockAccountOutputPort is a mock of port.AccountOutputPort.
 type MockAccountOutputPort struct {
 	ctrl     *gomock.Controller

@@ -15,15 +15,15 @@
 
 import * as runtime from '../runtime';
 import type {
-  AccountsGetAccountByIdDefaultResponse,
+  AccountsGetAccountByEmailDefaultResponse,
   ModelsAccountResponse,
   ModelsBadRequestError,
   ModelsCreateOrGetAccountRequest,
   ModelsUnauthorizedError,
 } from '../models/index';
 import {
-    AccountsGetAccountByIdDefaultResponseFromJSON,
-    AccountsGetAccountByIdDefaultResponseToJSON,
+    AccountsGetAccountByEmailDefaultResponseFromJSON,
+    AccountsGetAccountByEmailDefaultResponseToJSON,
     ModelsAccountResponseFromJSON,
     ModelsAccountResponseToJSON,
     ModelsBadRequestErrorFromJSON,
@@ -36,6 +36,10 @@ import {
 
 export interface AccountsCreateOrGetAccountRequest {
     modelsCreateOrGetAccountRequest: ModelsCreateOrGetAccountRequest;
+}
+
+export interface AccountsGetAccountByEmailRequest {
+    email: string;
 }
 
 export interface AccountsGetAccountByIdRequest {
@@ -85,6 +89,48 @@ export class AccountsApi extends runtime.BaseAPI {
      */
     async accountsCreateOrGetAccount(requestParameters: AccountsCreateOrGetAccountRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ModelsAccountResponse> {
         const response = await this.accountsCreateOrGetAccountRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * メールアドレスでアカウント取得
+     * Get account by email
+     */
+    async accountsGetAccountByEmailRaw(requestParameters: AccountsGetAccountByEmailRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ModelsAccountResponse>> {
+        if (requestParameters['email'] == null) {
+            throw new runtime.RequiredError(
+                'email',
+                'Required parameter "email" was null or undefined when calling accountsGetAccountByEmail().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['email'] != null) {
+            queryParameters['email'] = requestParameters['email'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/accounts/by-email`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ModelsAccountResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * メールアドレスでアカウント取得
+     * Get account by email
+     */
+    async accountsGetAccountByEmail(requestParameters: AccountsGetAccountByEmailRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ModelsAccountResponse> {
+        const response = await this.accountsGetAccountByEmailRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

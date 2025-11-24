@@ -4,7 +4,7 @@ apis/NotesApi.ts
 apis/TemplatesApi.ts
 apis/index.ts
 docs/AccountsApi.md
-docs/AccountsGetAccountByIdDefaultResponse.md
+docs/AccountsGetAccountByEmailDefaultResponse.md
 docs/ModelsAccount.md
 docs/ModelsAccountResponse.md
 docs/ModelsAccountSummary.md
@@ -35,7 +35,7 @@ docs/NotesDeleteNoteDefaultResponse.md
 docs/NotesUpdateNoteDefaultResponse.md
 docs/TemplatesApi.md
 index.ts
-models/AccountsGetAccountByIdDefaultResponse.ts
+models/AccountsGetAccountByEmailDefaultResponse.ts
 models/ModelsAccount.ts
 models/ModelsAccountResponse.ts
 models/ModelsAccountSummary.ts

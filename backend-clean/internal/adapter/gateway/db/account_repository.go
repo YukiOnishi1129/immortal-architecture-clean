@@ -3,12 +3,15 @@ package db
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	sqldb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
 	"immortal-architecture-clean/backend/internal/domain/account"
+	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/port"
 )
 
@@ -56,6 +59,19 @@ func (r *AccountRepository) GetByID(ctx context.Context, id string) (*account.Ac
 	}
 	row, err := q.GetAccountByID(ctx, uuid)
 	if err != nil {
+		return nil, err
+	}
+	return toDomainAccount(row)
+}
+
+// GetByEmail fetches account by email.
+func (r *AccountRepository) GetByEmail(ctx context.Context, email string) (*account.Account, error) {
+	q := queriesForContext(ctx, r.queries)
+	row, err := q.GetAccountByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domainerr.ErrNotFound
+		}
 		return nil, err
 	}
 	return toDomainAccount(row)

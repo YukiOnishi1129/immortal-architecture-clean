@@ -28,6 +28,9 @@ export async function listNoteQuery(filters?: NoteFilters) {
 
 export async function listMyNoteQuery(filters?: NoteFilters) {
   const session = await getAuthenticatedSessionServer();
+  if (!session?.account?.id) {
+    throw new Error("Unauthorized: No active session");
+  }
 
   const notes = await noteService.getNotes({
     ...filters,

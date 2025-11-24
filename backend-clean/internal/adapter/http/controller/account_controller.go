@@ -77,6 +77,16 @@ func (c *AccountController) GetCurrent(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, p.Response())
 }
 
+// GetAccountByEmail handles GET /accounts/by-email.
+func (c *AccountController) GetAccountByEmail(ctx echo.Context, params openapi.AccountsGetAccountByEmailParams) error {
+	input, p := c.newIO()
+	err := input.GetByEmail(ctx.Request().Context(), params.Email)
+	if err != nil {
+		return handleError(ctx, err)
+	}
+	return ctx.JSON(http.StatusOK, p.Response())
+}
+
 func (c *AccountController) newIO() (port.AccountInputPort, *presenter.AccountPresenter) {
 	output := c.outputFactory()
 	input := c.inputFactory(c.repoFactory(), output)

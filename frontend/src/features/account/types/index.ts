@@ -2,7 +2,10 @@ export interface Account {
   id: string;
   firstName: string;
   lastName: string;
+  fullName: string;
   email: string;
   thumbnail: string | null;
-  createdAt: Date;
+  lastLoginAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

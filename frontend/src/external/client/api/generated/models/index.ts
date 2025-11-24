@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-export * from './AccountsGetAccountByIdDefaultResponse';
+export * from './AccountsGetAccountByEmailDefaultResponse';
 export * from './ModelsAccount';
 export * from './ModelsAccountResponse';
 export * from './ModelsAccountSummary';

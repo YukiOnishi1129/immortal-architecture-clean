@@ -1,8 +1,8 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
 import { useCallback } from "react";
+import { signOut, useSession } from "@/features/auth/lib/better-auth-client";
 
 export function useHeader() {
   const { data: session } = useSession();
@@ -10,7 +10,7 @@ export function useHeader() {
   const queryClient = useQueryClient();
 
   const handleSignOut = useCallback(async () => {
-    await signOut({ redirect: false });
+    await signOut();
     // キャッシュをすべてクリア
     queryClient.clear();
     router.push("/login");
@@ -19,7 +19,8 @@ export function useHeader() {
   return {
     userName: session?.user?.name || undefined,
     userEmail: session?.user?.email || undefined,
-    userImage: session?.user?.image || undefined,
+    // カスタムセッションのaccount.thumbnailを使用
+    userImage: session?.account?.thumbnail || session?.user?.image || undefined,
     handleSignOut,
   };
 }

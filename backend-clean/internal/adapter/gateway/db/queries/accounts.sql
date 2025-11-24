@@ -9,6 +9,11 @@ FROM accounts
 WHERE provider = $1
   AND provider_account_id = $2;
 
+-- name: GetAccountByEmail :one
+SELECT *
+FROM accounts
+WHERE email = $1;
+
 -- name: UpsertAccount :one
 INSERT INTO accounts (
     email,

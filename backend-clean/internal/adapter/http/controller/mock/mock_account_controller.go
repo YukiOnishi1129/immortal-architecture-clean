@@ -37,3 +37,15 @@ func (s *AccountInputStub) GetByID(ctx context.Context, id string) error {
 	}
 	return s.GetErr
 }
+
+func (s *AccountInputStub) GetByEmail(ctx context.Context, email string) error {
+	if s.Output != nil && s.GetErr == nil {
+		_ = s.Output.PresentAccount(ctx, &account.Account{
+			ID:        "acc-1",
+			Email:     account.Email(email),
+			FirstName: "Taro",
+			Provider:  "google",
+		})
+	}
+	return s.GetErr
+}

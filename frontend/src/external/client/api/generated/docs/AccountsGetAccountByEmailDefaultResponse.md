@@ -1,5 +1,5 @@
 
-# AccountsGetAccountByIdDefaultResponse
+# AccountsGetAccountByEmailDefaultResponse
 
 
 ## Properties
@@ -12,13 +12,13 @@ Name | Type
 ## Example
 
 ```typescript
-import type { AccountsGetAccountByIdDefaultResponse } from ''
+import type { AccountsGetAccountByEmailDefaultResponse } from ''
 
 // TODO: Update the object below with actual values
 const example = {
   "code": null,
   "message": null,
-} satisfies AccountsGetAccountByIdDefaultResponse
+} satisfies AccountsGetAccountByEmailDefaultResponse
 
 console.log(example)
 
@@ -27,7 +27,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as AccountsGetAccountByIdDefaultResponse
+const exampleParsed = JSON.parse(exampleJSON) as AccountsGetAccountByEmailDefaultResponse
 console.log(exampleParsed)
 ```
 

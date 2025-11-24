@@ -27,6 +27,9 @@ export async function listTemplatesQuery(filters?: TemplateFilters) {
 
   // Get current user for onlyMyTemplates filter
   const session = await getSessionServer();
+  if (!session?.account?.id) {
+    throw new Error("Unauthorized: No active session");
+  }
 
   const ownerFilter =
     filters?.onlyMyTemplates && session?.account.id
@@ -43,6 +46,9 @@ export async function listTemplatesQuery(filters?: TemplateFilters) {
 
 export async function listMyTemplatesQuery() {
   const session = await getAuthenticatedSessionServer();
+  if (!session?.account?.id) {
+    throw new Error("Unauthorized: No active session");
+  }
 
   const templates = await templateService.getTemplates({
     ownerId: session.account.id,

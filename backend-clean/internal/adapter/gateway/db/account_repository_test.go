@@ -176,3 +176,52 @@ func TestAccountRepository_GetByID(t *testing.T) {
 		})
 	}
 }
+
+func TestAccountRepository_GetByEmail(t *testing.T) {
+	now := time.Now().UTC().Truncate(time.Second)
+	row := &sqldb.Account{
+		ID:                pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
+		Email:             "user@example.com",
+		FirstName:         "Taro",
+		LastName:          "Yamada",
+		IsActive:          true,
+		Provider:          "google",
+		ProviderAccountID: "pid",
+		Thumbnail:         pgtype.Text{String: "thumb", Valid: true},
+		LastLoginAt:       pgtype.Timestamptz{Time: now, Valid: true},
+		CreatedAt:         pgtype.Timestamptz{Time: now, Valid: true},
+		UpdatedAt:         pgtype.Timestamptz{Time: now, Valid: true},
+	}
+
+	tests := []struct {
+		name    string
+		email   string
+		row     *sqldb.Account
+		rowErr  error
+		wantErr bool
+	}{
+		{name: "[Success] GetByEmail returns domain", email: "user@example.com", row: row},
+		{name: "[Fail] GetByEmail invalid email", email: "user@example.com", row: func() *sqldb.Account { r := *row; r.Email = "bad"; return &r }(), wantErr: true},
+		{name: "[Fail] GetByEmail query error", email: "user@example.com", rowErr: errors.New("db error"), wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock := mockdb.NewAccountDBTX(tt.row, tt.rowErr)
+			repo := &AccountRepository{queries: sqldb.New(mock)}
+			acc, err := repo.GetByEmail(context.Background(), tt.email)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if acc.Email != account.Email(row.Email) {
+				t.Fatalf("email = %s, want %s", acc.Email, row.Email)
+			}
+		})
+	}
+}

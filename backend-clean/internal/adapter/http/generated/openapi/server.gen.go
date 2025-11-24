@@ -390,6 +390,11 @@ type ModelsUpdateTemplateRequest struct {
 	Name string `json:"name"`
 }
 
+// AccountsGetAccountByEmailParams defines parameters for AccountsGetAccountByEmail.
+type AccountsGetAccountByEmailParams struct {
+	Email string `form:"email" json:"email"`
+}
+
 // NotesListNotesParams defines parameters for NotesListNotes.
 type NotesListNotesParams struct {
 	// Q タイトルキーワード検索
@@ -468,6 +473,9 @@ type ServerInterface interface {
 	// Create or get account via OAuth
 	// (POST /api/accounts/auth)
 	AccountsCreateOrGetAccount(ctx echo.Context) error
+	// Get account by email
+	// (GET /api/accounts/by-email)
+	AccountsGetAccountByEmail(ctx echo.Context, params AccountsGetAccountByEmailParams) error
 	// Get current account
 	// (GET /api/accounts/me)
 	AccountsGetCurrentAccount(ctx echo.Context) error
@@ -523,6 +531,24 @@ func (w *ServerInterfaceWrapper) AccountsCreateOrGetAccount(ctx echo.Context) er
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.AccountsCreateOrGetAccount(ctx)
+	return err
+}
+
+// AccountsGetAccountByEmail converts echo context to params.
+func (w *ServerInterfaceWrapper) AccountsGetAccountByEmail(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AccountsGetAccountByEmailParams
+	// ------------- Required query parameter "email" -------------
+
+	err = runtime.BindQueryParameter("form", false, true, "email", ctx.QueryParams(), &params.Email)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter email: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.AccountsGetAccountByEmail(ctx, params)
 	return err
 }
 
@@ -844,6 +870,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.POST(baseURL+"/api/accounts/auth", wrapper.AccountsCreateOrGetAccount)
+	router.GET(baseURL+"/api/accounts/by-email", wrapper.AccountsGetAccountByEmail)
 	router.GET(baseURL+"/api/accounts/me", wrapper.AccountsGetCurrentAccount)
 	router.GET(baseURL+"/api/accounts/:accountId", wrapper.AccountsGetAccountById)
 	router.GET(baseURL+"/api/notes", wrapper.NotesListNotes)
