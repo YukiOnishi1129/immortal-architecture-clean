@@ -9,6 +9,9 @@ import { templateService } from "../../service/template/template.service";
 
 export async function createTemplateCommand(request: unknown) {
   const session = await getAuthenticatedSessionServer();
+  if (!session?.account?.id) {
+    throw new Error("Unauthorized: No active session");
+  }
 
   // Validate request
   const validated = CreateTemplateRequestSchema.parse(request);
@@ -23,6 +26,9 @@ export async function createTemplateCommand(request: unknown) {
 
 export async function updateTemplateCommand(id: string, request: unknown) {
   const session = await getAuthenticatedSessionServer();
+  if (!session?.account?.id) {
+    throw new Error("Unauthorized: No active session");
+  }
 
   try {
     // Validate request
@@ -54,6 +60,9 @@ export async function updateTemplateCommand(id: string, request: unknown) {
 
 export async function deleteTemplateCommand(id: string) {
   const session = await getAuthenticatedSessionServer();
+  if (!session?.account?.id) {
+    throw new Error("Unauthorized: No active session");
+  }
 
   // Delete template
   await templateService.deleteTemplate(id, session.account.id);

@@ -12,6 +12,7 @@ import (
 type AccountInputPort interface {
 	CreateOrGet(ctx context.Context, input account.OAuthAccountInput) error
 	GetByID(ctx context.Context, id string) error
+	GetByEmail(ctx context.Context, email string) error
 }
 
 // AccountOutputPort converts account results for external responses.
@@ -25,4 +26,5 @@ type AccountOutputPort interface {
 type AccountRepository interface {
 	UpsertOAuthAccount(ctx context.Context, input account.OAuthAccountInput) (*account.Account, error)
 	GetByID(ctx context.Context, id string) (*account.Account, error)
+	GetByEmail(ctx context.Context, email string) (*account.Account, error)
 }

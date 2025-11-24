@@ -53,6 +53,22 @@ export class AccountService {
     }
   }
 
+  async getCurrentAccountByEmail(
+    email: string,
+  ): Promise<AccountResponse | null> {
+    try {
+      const account = await this.api.accountsGetAccountByEmail({
+        email: email,
+      });
+      return toAccountResponse(account);
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
   async update(
     _id: string,
     _input: UpdateAccountRequest,

@@ -25,6 +25,14 @@ interface Accounts {
     @path accountId: string
   ): AccountResponse | NotFoundError | UnauthorizedError;
 
+  /** メールアドレスでアカウント取得 */
+  @get
+  @route("/by-email")
+  @summary("Get account by email")
+  getAccountByEmail(
+    @query email: string
+  ): AccountResponse | NotFoundError | UnauthorizedError;
+
   /** OAuth認証（内部処理） */
   @post
   @route("/auth")

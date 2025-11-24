@@ -54,6 +54,21 @@ func (u *AccountInteractor) GetByID(ctx context.Context, id string) error {
 	return u.output.PresentAccount(ctx, a)
 }
 
+// GetByEmail retrieves account by email.
+func (u *AccountInteractor) GetByEmail(ctx context.Context, email string) error {
+	// Validate email format
+	_, err := account.ParseEmail(email)
+	if err != nil {
+		return err
+	}
+
+	a, err := u.repo.GetByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+	return u.output.PresentAccount(ctx, a)
+}
+
 func valueOrEmpty(s *string) string {
 	if s == nil {
 		return ""

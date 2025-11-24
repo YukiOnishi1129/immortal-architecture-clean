@@ -15,7 +15,7 @@
 
 import * as runtime from '../runtime';
 import type {
-  AccountsGetAccountByIdDefaultResponse,
+  AccountsGetAccountByEmailDefaultResponse,
   ModelsCreateTemplateRequest,
   ModelsSuccessResponse,
   ModelsTemplateResponse,
@@ -25,8 +25,8 @@ import type {
   NotesUpdateNoteDefaultResponse,
 } from '../models/index';
 import {
-    AccountsGetAccountByIdDefaultResponseFromJSON,
-    AccountsGetAccountByIdDefaultResponseToJSON,
+    AccountsGetAccountByEmailDefaultResponseFromJSON,
+    AccountsGetAccountByEmailDefaultResponseToJSON,
     ModelsCreateTemplateRequestFromJSON,
     ModelsCreateTemplateRequestToJSON,
     ModelsSuccessResponseFromJSON,

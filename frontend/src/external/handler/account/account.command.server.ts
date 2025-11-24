@@ -24,6 +24,9 @@ export async function updateAccountCommand(
   request: UpdateAccountRequest,
 ): Promise<UpdateAccountResponse> {
   const session = await getAuthenticatedSessionServer();
+  if (!session?.account?.id) {
+    throw new Error("Unauthorized: No active session");
+  }
 
   // Check if the user is updating their own account
   if (session.account.id !== id) {

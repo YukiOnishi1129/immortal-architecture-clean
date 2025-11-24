@@ -1,12 +1,13 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useCallback } from "react";
+import { signIn } from "@/features/auth/lib/better-auth-client";
 
 export function useLoginClient() {
-  const handleGoogleLogin = useCallback(() => {
-    signIn("google", {
-      callbackUrl: "/notes",
+  const handleGoogleLogin = useCallback(async () => {
+    await signIn.social({
+      provider: "google",
+      callbackURL: "/notes",
     });
   }, []);
 

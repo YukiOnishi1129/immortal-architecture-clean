@@ -12,6 +12,9 @@ import { noteService } from "../../service/note/note.service";
 
 export async function createNoteCommand(request: unknown) {
   const session = await getAuthenticatedSessionServer();
+  if (!session?.account?.id) {
+    throw new Error("Unauthorized: No active session");
+  }
 
   // リクエストのバリデーション
   const validated = CreateNoteRequestSchema.parse(request);
@@ -22,6 +25,9 @@ export async function createNoteCommand(request: unknown) {
 
 export async function updateNoteCommand(id: string, request: unknown) {
   const session = await getAuthenticatedSessionServer();
+  if (!session?.account?.id) {
+    throw new Error("Unauthorized: No active session");
+  }
 
   // リクエストのバリデーション
   const validated = UpdateNoteRequestSchema.parse(request);

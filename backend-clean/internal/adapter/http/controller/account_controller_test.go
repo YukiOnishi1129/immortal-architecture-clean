@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	ctrlmock "immortal-architecture-clean/backend/internal/adapter/http/controller/mock"
+	openapi "immortal-architecture-clean/backend/internal/adapter/http/generated/openapi"
 	"immortal-architecture-clean/backend/internal/adapter/http/presenter"
 	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/port"
@@ -140,6 +141,46 @@ func TestAccountController_GetByID(t *testing.T) {
 
 			_ = ctrl.GetByID(c, "acc-1")
 			assertStatusBody(t, rec, tt.wantStatus, tt.wantBody)
+		})
+	}
+}
+
+func TestAccountController_GetAccountByEmail(t *testing.T) {
+	tests := []struct {
+		name       string
+		email      string
+		getErr     error
+		wantStatus int
+		wantBody   string
+	}{
+		{name: "[Success] get by email", email: "user@example.com", wantStatus: http.StatusOK},
+		{name: "[Fail] not found", email: "missing@example.com", getErr: domainerr.ErrNotFound, wantStatus: http.StatusNotFound, wantBody: domainerr.ErrNotFound.Error()},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := presenter.NewAccountPresenter()
+			input := &ctrlmock.AccountInputStub{GetErr: tt.getErr}
+			ctrl := NewAccountController(
+				func(repo port.AccountRepository, output port.AccountOutputPort) port.AccountInputPort {
+					input.Output = output
+					return input
+				},
+				func() *presenter.AccountPresenter { return p },
+				func() port.AccountRepository { return nil },
+			)
+
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/api/accounts/by-email?email="+tt.email, nil)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+
+			// Parse query params
+			_ = ctrl.GetAccountByEmail(c, openapi.AccountsGetAccountByEmailParams{Email: tt.email})
+			assertStatusBody(t, rec, tt.wantStatus, tt.wantBody)
+			if tt.wantStatus == http.StatusOK && (p.Response() == nil || p.Response().Email != tt.email) {
+				t.Fatalf("presenter response not set or email mismatch: %+v", p.Response())
+			}
 		})
 	}
 }

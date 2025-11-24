@@ -33,6 +33,11 @@ func (s *Server) AccountsGetAccountById(ctx echo.Context, accountId string) erro
 	return s.account.GetByID(ctx, accountId)
 }
 
+// AccountsGetAccountByEmail handles GET /api/accounts/by-email.
+func (s *Server) AccountsGetAccountByEmail(ctx echo.Context, params openapi.AccountsGetAccountByEmailParams) error {
+	return s.account.GetAccountByEmail(ctx, params)
+}
+
 // NotesListNotes handles GET /api/notes.
 func (s *Server) NotesListNotes(ctx echo.Context, params openapi.NotesListNotesParams) error {
 	return s.note.List(ctx, params)

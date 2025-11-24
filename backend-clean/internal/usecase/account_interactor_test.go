@@ -150,3 +150,62 @@ func TestAccountInteractor_GetByID(t *testing.T) {
 		})
 	}
 }
+
+func TestAccountInteractor_GetByEmail(t *testing.T) {
+	email, _ := account.ParseEmail("user@example.com")
+	tests := []struct {
+		name      string
+		email     string
+		repoAcc   *account.Account
+		repoErr   error
+		wantError error
+	}{
+		{
+			name:  "[Success] get by email",
+			email: "user@example.com",
+			repoAcc: &account.Account{
+				ID:    "acc-1",
+				Email: email,
+			},
+		},
+		{
+			name:      "[Fail] invalid email format",
+			email:     "invalid-email",
+			wantError: account.ErrInvalidEmail,
+		},
+		{
+			name:      "[Fail] not found",
+			email:     "missing@example.com",
+			repoErr:   domainerr.ErrNotFound,
+			wantError: domainerr.ErrNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			repo := mockusecase.NewMockAccountRepository(ctrl)
+			out := mockusecase.NewMockAccountOutputPort(ctrl)
+
+			shouldCallRepo := tt.wantError == nil || tt.wantError == domainerr.ErrNotFound
+			if shouldCallRepo {
+				repo.EXPECT().GetByEmail(gomock.Any(), tt.email).Return(tt.repoAcc, tt.repoErr)
+			}
+			if tt.wantError == nil && tt.repoErr == nil {
+				out.EXPECT().PresentAccount(gomock.Any(), tt.repoAcc).Return(nil)
+			}
+
+			interactor := uc.NewAccountInteractor(repo, out)
+			err := interactor.GetByEmail(context.Background(), tt.email)
+
+			if tt.wantError == nil && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if tt.wantError != nil && !errors.Is(err, tt.wantError) {
+				t.Fatalf("want %v, got %v", tt.wantError, err)
+			}
+		})
+	}
+}

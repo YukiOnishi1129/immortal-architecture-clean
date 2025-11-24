@@ -31,19 +31,19 @@ import {
 /**
  * 
  * @export
- * @interface AccountsGetAccountByIdDefaultResponse
+ * @interface AccountsGetAccountByEmailDefaultResponse
  */
-export interface AccountsGetAccountByIdDefaultResponse {
+export interface AccountsGetAccountByEmailDefaultResponse {
     /**
      * 
      * @type {string}
-     * @memberof AccountsGetAccountByIdDefaultResponse
+     * @memberof AccountsGetAccountByEmailDefaultResponse
      */
-    code: AccountsGetAccountByIdDefaultResponseCodeEnum;
+    code: AccountsGetAccountByEmailDefaultResponseCodeEnum;
     /**
      * 
      * @type {string}
-     * @memberof AccountsGetAccountByIdDefaultResponse
+     * @memberof AccountsGetAccountByEmailDefaultResponse
      */
     message: string;
 }
@@ -52,26 +52,26 @@ export interface AccountsGetAccountByIdDefaultResponse {
 /**
  * @export
  */
-export const AccountsGetAccountByIdDefaultResponseCodeEnum = {
+export const AccountsGetAccountByEmailDefaultResponseCodeEnum = {
     Unauthorized: 'UNAUTHORIZED'
 } as const;
-export type AccountsGetAccountByIdDefaultResponseCodeEnum = typeof AccountsGetAccountByIdDefaultResponseCodeEnum[keyof typeof AccountsGetAccountByIdDefaultResponseCodeEnum];
+export type AccountsGetAccountByEmailDefaultResponseCodeEnum = typeof AccountsGetAccountByEmailDefaultResponseCodeEnum[keyof typeof AccountsGetAccountByEmailDefaultResponseCodeEnum];
 
 
 /**
- * Check if a given object implements the AccountsGetAccountByIdDefaultResponse interface.
+ * Check if a given object implements the AccountsGetAccountByEmailDefaultResponse interface.
  */
-export function instanceOfAccountsGetAccountByIdDefaultResponse(value: object): value is AccountsGetAccountByIdDefaultResponse {
+export function instanceOfAccountsGetAccountByEmailDefaultResponse(value: object): value is AccountsGetAccountByEmailDefaultResponse {
     if (!('code' in value) || value['code'] === undefined) return false;
     if (!('message' in value) || value['message'] === undefined) return false;
     return true;
 }
 
-export function AccountsGetAccountByIdDefaultResponseFromJSON(json: any): AccountsGetAccountByIdDefaultResponse {
-    return AccountsGetAccountByIdDefaultResponseFromJSONTyped(json, false);
+export function AccountsGetAccountByEmailDefaultResponseFromJSON(json: any): AccountsGetAccountByEmailDefaultResponse {
+    return AccountsGetAccountByEmailDefaultResponseFromJSONTyped(json, false);
 }
 
-export function AccountsGetAccountByIdDefaultResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): AccountsGetAccountByIdDefaultResponse {
+export function AccountsGetAccountByEmailDefaultResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): AccountsGetAccountByEmailDefaultResponse {
     if (json == null) {
         return json;
     }
@@ -82,11 +82,11 @@ export function AccountsGetAccountByIdDefaultResponseFromJSONTyped(json: any, ig
     };
 }
 
-export function AccountsGetAccountByIdDefaultResponseToJSON(json: any): AccountsGetAccountByIdDefaultResponse {
-    return AccountsGetAccountByIdDefaultResponseToJSONTyped(json, false);
+export function AccountsGetAccountByEmailDefaultResponseToJSON(json: any): AccountsGetAccountByEmailDefaultResponse {
+    return AccountsGetAccountByEmailDefaultResponseToJSONTyped(json, false);
 }
 
-export function AccountsGetAccountByIdDefaultResponseToJSONTyped(value?: AccountsGetAccountByIdDefaultResponse | null, ignoreDiscriminator: boolean = false): any {
+export function AccountsGetAccountByEmailDefaultResponseToJSONTyped(value?: AccountsGetAccountByEmailDefaultResponse | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
