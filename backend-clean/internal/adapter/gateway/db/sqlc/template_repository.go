@@ -1,5 +1,5 @@
-// Package db implements gateway repositories.
-package db
+// Package sqlc implements gateway repositories using sqlc.
+package sqlc
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	sqldb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
+	"immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/generated"
 	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/domain/template"
 	"immortal-architecture-clean/backend/internal/port"
@@ -32,7 +32,7 @@ func toTemplateOwner(ownerID pgtype.UUID, first, last string, thumb pgtype.Text)
 // TemplateRepository implements template persistence.
 type TemplateRepository struct {
 	pool    *pgxpool.Pool
-	queries *sqldb.Queries
+	queries *generated.Queries
 }
 
 var _ port.TemplateRepository = (*TemplateRepository)(nil)
@@ -41,13 +41,13 @@ var _ port.TemplateRepository = (*TemplateRepository)(nil)
 func NewTemplateRepository(pool *pgxpool.Pool) *TemplateRepository {
 	return &TemplateRepository{
 		pool:    pool,
-		queries: sqldb.New(pool),
+		queries: generated.New(pool),
 	}
 }
 
 // List returns templates by filters.
 func (r *TemplateRepository) List(ctx context.Context, filters template.Filters) ([]template.WithUsage, error) {
-	params := &sqldb.ListTemplatesParams{}
+	params := &generated.ListTemplatesParams{}
 	if filters.OwnerID != nil && *filters.OwnerID != "" {
 		if id, err := toUUID(*filters.OwnerID); err == nil {
 			params.Column1 = id
@@ -123,7 +123,7 @@ func (r *TemplateRepository) Create(ctx context.Context, tpl template.Template) 
 	if err != nil {
 		return nil, err
 	}
-	row, err := queriesForContext(ctx, r.queries).CreateTemplate(ctx, &sqldb.CreateTemplateParams{
+	row, err := queriesForContext(ctx, r.queries).CreateTemplate(ctx, &generated.CreateTemplateParams{
 		Name:    tpl.Name,
 		OwnerID: owner,
 	})
@@ -144,7 +144,7 @@ func (r *TemplateRepository) Update(ctx context.Context, tpl template.Template) 
 	if err != nil {
 		return nil, err
 	}
-	row, err := queriesForContext(ctx, r.queries).UpdateTemplate(ctx, &sqldb.UpdateTemplateParams{
+	row, err := queriesForContext(ctx, r.queries).UpdateTemplate(ctx, &generated.UpdateTemplateParams{
 		ID:   pgID,
 		Name: tpl.Name,
 	})
@@ -186,7 +186,7 @@ func (r *TemplateRepository) ReplaceFields(ctx context.Context, templateID strin
 		if order == 0 {
 			order = idx + 1
 		}
-		if _, err := q.CreateField(ctx, &sqldb.CreateFieldParams{
+		if _, err := q.CreateField(ctx, &generated.CreateFieldParams{
 			TemplateID: pgID,
 			Label:      f.Label,
 			Order:      int32(order), //nolint:gosec

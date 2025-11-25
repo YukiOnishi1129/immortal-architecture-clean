@@ -10,10 +10,10 @@ import (
 
 	grpccontroller "immortal-architecture-clean/backend/internal/adapter/grpc/controller"
 	"immortal-architecture-clean/backend/internal/adapter/grpc/generated/accountpb"
-	grpcpresenter "immortal-architecture-clean/backend/internal/adapter/grpc/presenter"
 	"immortal-architecture-clean/backend/internal/driver/config"
 	driverdb "immortal-architecture-clean/backend/internal/driver/db"
 	"immortal-architecture-clean/backend/internal/driver/factory"
+	grpcfactory "immortal-architecture-clean/backend/internal/driver/factory/grpc"
 )
 
 // BuildServer composes all dependencies and returns a gRPC server, config, and cleanup function.
@@ -33,11 +33,7 @@ func BuildServer(ctx context.Context) (*grpc.Server, *config.Config, func(), err
 
 	accountRepoFactory := factory.NewAccountRepoFactory(pool)
 	accountInputFactory := factory.NewAccountInputFactory()
-
-	// Create gRPC output factory
-	accountOutputFactory := func() *grpcpresenter.AccountPresenter {
-		return grpcpresenter.NewAccountPresenter()
-	}
+	accountOutputFactory := grpcfactory.NewAccountOutputFactory()
 
 	// Create gRPC server
 	s := grpc.NewServer()

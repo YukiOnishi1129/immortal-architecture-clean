@@ -3,7 +3,7 @@
 //   sqlc v1.30.0
 // source: accounts.sql
 
-package sqldb
+package generated
 
 import (
 	"context"
@@ -11,14 +11,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const getAccountByID = `-- name: GetAccountByID :one
+const getAccountByEmail = `-- name: GetAccountByEmail :one
 SELECT id, email, first_name, last_name, is_active, provider, provider_account_id, thumbnail, last_login_at, created_at, updated_at
 FROM accounts
-WHERE id = $1
+WHERE email = $1
 `
 
-func (q *Queries) GetAccountByID(ctx context.Context, id pgtype.UUID) (*Account, error) {
-	row := q.db.QueryRow(ctx, getAccountByID, id)
+func (q *Queries) GetAccountByEmail(ctx context.Context, email string) (*Account, error) {
+	row := q.db.QueryRow(ctx, getAccountByEmail, email)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -36,14 +36,14 @@ func (q *Queries) GetAccountByID(ctx context.Context, id pgtype.UUID) (*Account,
 	return &i, err
 }
 
-const getAccountByEmail = `-- name: GetAccountByEmail :one
+const getAccountByID = `-- name: GetAccountByID :one
 SELECT id, email, first_name, last_name, is_active, provider, provider_account_id, thumbnail, last_login_at, created_at, updated_at
 FROM accounts
-WHERE email = $1
+WHERE id = $1
 `
 
-func (q *Queries) GetAccountByEmail(ctx context.Context, email string) (*Account, error) {
-	row := q.db.QueryRow(ctx, getAccountByEmail, email)
+func (q *Queries) GetAccountByID(ctx context.Context, id pgtype.UUID) (*Account, error) {
+	row := q.db.QueryRow(ctx, getAccountByID, id)
 	var i Account
 	err := row.Scan(
 		&i.ID,

@@ -1,4 +1,4 @@
-package db
+package sqlc
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 
-	mockdb "immortal-architecture-clean/backend/internal/adapter/gateway/db/mock"
-	sqldb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
+	mockdb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/mock"
+	"immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/generated"
 	"immortal-architecture-clean/backend/internal/domain/account"
 )
 
@@ -17,12 +17,12 @@ func TestToDomainAccount(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	tests := []struct {
 		name    string
-		row     *sqldb.Account
+		row     *generated.Account
 		wantErr bool
 	}{
 		{
 			name: "[Success] maps nullable fields",
-			row: &sqldb.Account{
+			row: &generated.Account{
 				ID:                pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 				Email:             "user@example.com",
 				FirstName:         "Taro",
@@ -38,7 +38,7 @@ func TestToDomainAccount(t *testing.T) {
 		},
 		{
 			name: "[Fail] invalid email",
-			row: &sqldb.Account{
+			row: &generated.Account{
 				ID:        pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 				Email:     "bad-email",
 				CreatedAt: pgtype.Timestamptz{Time: now, Valid: true},
@@ -75,7 +75,7 @@ func TestToDomainAccount(t *testing.T) {
 
 func TestAccountRepository_UpsertOAuthAccount(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	baseRow := &sqldb.Account{
+	baseRow := &generated.Account{
 		ID:                pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Email:             "user@example.com",
 		FirstName:         "Taro",
@@ -90,19 +90,19 @@ func TestAccountRepository_UpsertOAuthAccount(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		row     *sqldb.Account
+		row     *generated.Account
 		rowErr  error
 		wantErr bool
 	}{
 		{name: "[Success] upsert returns domain", row: baseRow},
-		{name: "[Fail] invalid email", row: func() *sqldb.Account { r := *baseRow; r.Email = "bad"; return &r }(), wantErr: true},
+		{name: "[Fail] invalid email", row: func() *generated.Account { r := *baseRow; r.Email = "bad"; return &r }(), wantErr: true},
 		{name: "[Fail] query error", rowErr: errors.New("db error"), wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewAccountDBTX(tt.row, tt.rowErr)
-			repo := &AccountRepository{queries: sqldb.New(mock)}
+			repo := &AccountRepository{queries: generated.New(mock)}
 			input := account.OAuthAccountInput{
 				Email:             baseRow.Email,
 				FirstName:         baseRow.FirstName,
@@ -130,7 +130,7 @@ func TestAccountRepository_UpsertOAuthAccount(t *testing.T) {
 
 func TestAccountRepository_GetByID(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	row := &sqldb.Account{
+	row := &generated.Account{
 		ID:                pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Email:             "user@example.com",
 		FirstName:         "Taro",
@@ -147,7 +147,7 @@ func TestAccountRepository_GetByID(t *testing.T) {
 	tests := []struct {
 		name    string
 		id      string
-		row     *sqldb.Account
+		row     *generated.Account
 		rowErr  error
 		wantErr bool
 	}{
@@ -159,7 +159,7 @@ func TestAccountRepository_GetByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewAccountDBTX(tt.row, tt.rowErr)
-			repo := &AccountRepository{queries: sqldb.New(mock)}
+			repo := &AccountRepository{queries: generated.New(mock)}
 			acc, err := repo.GetByID(context.Background(), tt.id)
 			if tt.wantErr {
 				if err == nil {
@@ -179,7 +179,7 @@ func TestAccountRepository_GetByID(t *testing.T) {
 
 func TestAccountRepository_GetByEmail(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	row := &sqldb.Account{
+	row := &generated.Account{
 		ID:                pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Email:             "user@example.com",
 		FirstName:         "Taro",
@@ -196,19 +196,19 @@ func TestAccountRepository_GetByEmail(t *testing.T) {
 	tests := []struct {
 		name    string
 		email   string
-		row     *sqldb.Account
+		row     *generated.Account
 		rowErr  error
 		wantErr bool
 	}{
 		{name: "[Success] GetByEmail returns domain", email: "user@example.com", row: row},
-		{name: "[Fail] GetByEmail invalid email", email: "user@example.com", row: func() *sqldb.Account { r := *row; r.Email = "bad"; return &r }(), wantErr: true},
+		{name: "[Fail] GetByEmail invalid email", email: "user@example.com", row: func() *generated.Account { r := *row; r.Email = "bad"; return &r }(), wantErr: true},
 		{name: "[Fail] GetByEmail query error", email: "user@example.com", rowErr: errors.New("db error"), wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewAccountDBTX(tt.row, tt.rowErr)
-			repo := &AccountRepository{queries: sqldb.New(mock)}
+			repo := &AccountRepository{queries: generated.New(mock)}
 			acc, err := repo.GetByEmail(context.Background(), tt.email)
 			if tt.wantErr {
 				if err == nil {

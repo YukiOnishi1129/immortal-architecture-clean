@@ -12,6 +12,7 @@ import (
 	"immortal-architecture-clean/backend/internal/driver/config"
 	driverdb "immortal-architecture-clean/backend/internal/driver/db"
 	"immortal-architecture-clean/backend/internal/driver/factory"
+	httpfactory "immortal-architecture-clean/backend/internal/driver/factory/http"
 )
 
 // BuildServer composes all dependencies and returns an Echo server, config, and cleanup function.
@@ -36,9 +37,9 @@ func BuildServer(ctx context.Context) (*echo.Echo, *config.Config, func(), error
 	noteRepoFactory := factory.NewNoteRepoFactory(pool)
 	txFactory := factory.NewTxFactory(txMgr)
 
-	accountOutputFactory := factory.NewAccountOutputFactory()
-	templateOutputFactory := factory.NewTemplateOutputFactory()
-	noteOutputFactory := factory.NewNoteOutputFactory()
+	accountOutputFactory := httpfactory.NewAccountOutputFactory()
+	templateOutputFactory := httpfactory.NewTemplateOutputFactory()
+	noteOutputFactory := httpfactory.NewNoteOutputFactory()
 
 	accountInputFactory := factory.NewAccountInputFactory()
 	templateInputFactory := factory.NewTemplateInputFactory()

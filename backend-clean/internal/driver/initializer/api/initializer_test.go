@@ -9,6 +9,7 @@ import (
 	httpcontroller "immortal-architecture-clean/backend/internal/adapter/http/controller"
 	openapi "immortal-architecture-clean/backend/internal/adapter/http/generated/openapi"
 	"immortal-architecture-clean/backend/internal/driver/factory"
+	httpfactory "immortal-architecture-clean/backend/internal/driver/factory/http"
 )
 
 // Smoke test to ensure initializer wiring does not panic and returns non-nil server.
@@ -17,18 +18,18 @@ func TestNewServer_Wiring(t *testing.T) {
 	var pool *pgxpool.Pool
 	ac := httpcontroller.NewAccountController(
 		factory.NewAccountInputFactory(),
-		factory.NewAccountOutputFactory(),
+		httpfactory.NewAccountOutputFactory(),
 		factory.NewAccountRepoFactory(pool),
 	)
 	tc := httpcontroller.NewTemplateController(
 		factory.NewTemplateInputFactory(),
-		factory.NewTemplateOutputFactory(),
+		httpfactory.NewTemplateOutputFactory(),
 		factory.NewTemplateRepoFactory(pool),
 		factory.NewTxFactory(nil),
 	)
 	nc := httpcontroller.NewNoteController(
 		factory.NewNoteInputFactory(),
-		factory.NewNoteOutputFactory(),
+		httpfactory.NewNoteOutputFactory(),
 		factory.NewNoteRepoFactory(pool),
 		factory.NewTemplateRepoFactory(pool),
 		factory.NewTxFactory(nil),

@@ -1,3 +1,4 @@
+// Package mock provides test mocks for sqlc repositories.
 package mock
 
 import (
@@ -7,27 +8,28 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
-	sqldb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
+	"immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/generated"
 )
 
 // NoteDBTX is a lightweight mock for sqlc.DBTX used in note repository tests.
 type NoteDBTX struct {
-	row        *sqldb.Note
-	getRow     *sqldb.GetNoteByIDRow
-	sectionRow *sqldb.Section
+	row        *generated.Note
+	getRow     *generated.GetNoteByIDRow
+	sectionRow *generated.Section
 	rowErr     error
 	execErr    error
 	queryErr   error
-	listNotes  []*sqldb.ListNotesRow
-	sections   []*sqldb.Section
+	listNotes  []*generated.ListNotesRow
+	sections   []*generated.Section
 }
 
-func NewNoteDBTX(row *sqldb.Note, rowErr, execErr error) *NoteDBTX {
+// NewNoteDBTX creates a mock DBTX that always returns the given row/err.
+func NewNoteDBTX(row *generated.Note, rowErr, execErr error) *NoteDBTX {
 	return &NoteDBTX{row: row, rowErr: rowErr, execErr: execErr}
 }
 
 // WithList allows configuring rows returned by ListNotes/ListSections.
-func (m *NoteDBTX) WithList(notes []*sqldb.ListNotesRow, sections []*sqldb.Section, queryErr error) *NoteDBTX {
+func (m *NoteDBTX) WithList(notes []*generated.ListNotesRow, sections []*generated.Section, queryErr error) *NoteDBTX {
 	m.listNotes = notes
 	m.sections = sections
 	m.queryErr = queryErr
@@ -35,22 +37,24 @@ func (m *NoteDBTX) WithList(notes []*sqldb.ListNotesRow, sections []*sqldb.Secti
 }
 
 // WithGetRow sets a GetNoteByIDRow for QueryRow scans requiring 11 columns.
-func (m *NoteDBTX) WithGetRow(row *sqldb.GetNoteByIDRow) *NoteDBTX {
+func (m *NoteDBTX) WithGetRow(row *generated.GetNoteByIDRow) *NoteDBTX {
 	m.getRow = row
 	return m
 }
 
 // WithSectionRow sets Section row for UpdateSectionContent scans.
-func (m *NoteDBTX) WithSectionRow(row *sqldb.Section) *NoteDBTX {
+func (m *NoteDBTX) WithSectionRow(row *generated.Section) *NoteDBTX {
 	m.sectionRow = row
 	return m
 }
 
-func (m *NoteDBTX) Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error) {
+// Exec implements sqlc.DBTX interface.
+func (m *NoteDBTX) Exec(_ context.Context, _ string, _ ...interface{}) (pgconn.CommandTag, error) {
 	return pgconn.CommandTag{}, m.execErr
 }
 
-func (m *NoteDBTX) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
+// Query implements sqlc.DBTX interface.
+func (m *NoteDBTX) Query(_ context.Context, _ string, args ...interface{}) (pgx.Rows, error) {
 	if m.queryErr != nil {
 		return nil, m.queryErr
 	}
@@ -61,14 +65,15 @@ func (m *NoteDBTX) Query(ctx context.Context, sql string, args ...interface{}) (
 	return &sectionRows{items: m.sections}, nil
 }
 
-func (m *NoteDBTX) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
+// QueryRow implements sqlc.DBTX interface.
+func (m *NoteDBTX) QueryRow(_ context.Context, _ string, _ ...interface{}) pgx.Row {
 	return &noteRow{row: m.row, getRow: m.getRow, secRow: m.sectionRow, err: m.rowErr}
 }
 
 type noteRow struct {
-	row    *sqldb.Note
-	getRow *sqldb.GetNoteByIDRow
-	secRow *sqldb.Section
+	row    *generated.Note
+	getRow *generated.GetNoteByIDRow
+	secRow *generated.Section
 	err    error
 }
 
@@ -121,11 +126,11 @@ func (m *noteRow) Scan(dest ...interface{}) error {
 
 func (m *noteRow) FieldDescriptions() []pgconn.FieldDescription { return nil }
 func (m *noteRow) RawValues() [][]byte                          { return nil }
-func (m *noteRow) Value(i int) (interface{}, error)             { return nil, nil }
+func (m *noteRow) Value(_ int) (interface{}, error)             { return nil, nil }
 func (m *noteRow) Err() error                                   { return m.err }
 
 type noteRows struct {
-	items []*sqldb.ListNotesRow
+	items []*generated.ListNotesRow
 	idx   int
 	err   error
 }
@@ -161,7 +166,7 @@ func (r *noteRows) Scan(dest ...interface{}) error {
 func (r *noteRows) Conn() *pgx.Conn { return nil }
 
 type sectionRows struct {
-	items []*sqldb.Section
+	items []*generated.Section
 	idx   int
 	err   error
 }

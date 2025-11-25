@@ -1,5 +1,5 @@
-// Package db implements gateway repositories.
-package db
+// Package sqlc implements gateway repositories using sqlc.
+package sqlc
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	sqldb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
+	"immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/generated"
 	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/domain/note"
 	"immortal-architecture-clean/backend/internal/port"
@@ -18,7 +18,7 @@ import (
 // NoteRepository implements note persistence.
 type NoteRepository struct {
 	pool    *pgxpool.Pool
-	queries *sqldb.Queries
+	queries *generated.Queries
 }
 
 var _ port.NoteRepository = (*NoteRepository)(nil)
@@ -27,13 +27,13 @@ var _ port.NoteRepository = (*NoteRepository)(nil)
 func NewNoteRepository(pool *pgxpool.Pool) *NoteRepository {
 	return &NoteRepository{
 		pool:    pool,
-		queries: sqldb.New(pool),
+		queries: generated.New(pool),
 	}
 }
 
 // List returns notes by filters.
 func (r *NoteRepository) List(ctx context.Context, filters note.Filters) ([]note.WithMeta, error) {
-	params := &sqldb.ListNotesParams{}
+	params := &generated.ListNotesParams{}
 	if filters.Status != nil {
 		params.Column1 = string(*filters.Status)
 	}
@@ -137,7 +137,7 @@ func (r *NoteRepository) Create(ctx context.Context, n note.Note) (*note.Note, e
 	if err != nil {
 		return nil, err
 	}
-	row, err := queriesForContext(ctx, r.queries).CreateNote(ctx, &sqldb.CreateNoteParams{
+	row, err := queriesForContext(ctx, r.queries).CreateNote(ctx, &generated.CreateNoteParams{
 		Title:      n.Title,
 		TemplateID: templateID,
 		OwnerID:    ownerID,
@@ -163,7 +163,7 @@ func (r *NoteRepository) Update(ctx context.Context, n note.Note) (*note.Note, e
 	if err != nil {
 		return nil, err
 	}
-	row, err := queriesForContext(ctx, r.queries).UpdateNote(ctx, &sqldb.UpdateNoteParams{
+	row, err := queriesForContext(ctx, r.queries).UpdateNote(ctx, &generated.UpdateNoteParams{
 		ID:    pgID,
 		Title: n.Title,
 	})
@@ -190,7 +190,7 @@ func (r *NoteRepository) UpdateStatus(ctx context.Context, id string, status not
 	if err != nil {
 		return nil, err
 	}
-	row, err := queriesForContext(ctx, r.queries).UpdateNoteStatus(ctx, &sqldb.UpdateNoteStatusParams{
+	row, err := queriesForContext(ctx, r.queries).UpdateNoteStatus(ctx, &generated.UpdateNoteStatusParams{
 		ID:     pgID,
 		Status: string(status),
 	})
@@ -234,7 +234,7 @@ func (r *NoteRepository) ReplaceSections(ctx context.Context, noteID string, sec
 			if err != nil {
 				return err
 			}
-			if _, err := q.UpdateSectionContent(ctx, &sqldb.UpdateSectionContentParams{
+			if _, err := q.UpdateSectionContent(ctx, &generated.UpdateSectionContentParams{
 				ID:      secID,
 				Content: s.Content,
 			}); err != nil {
@@ -246,7 +246,7 @@ func (r *NoteRepository) ReplaceSections(ctx context.Context, noteID string, sec
 		if err != nil {
 			return err
 		}
-		if _, err := q.CreateSection(ctx, &sqldb.CreateSectionParams{
+		if _, err := q.CreateSection(ctx, &generated.CreateSectionParams{
 			NoteID:  nID,
 			FieldID: fieldID,
 			Content: s.Content,

@@ -1,4 +1,4 @@
-package db
+package sqlc
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	mockdb "immortal-architecture-clean/backend/internal/adapter/gateway/db/mock"
-	sqldb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
+	mockdb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/mock"
+	"immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/generated"
 	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/domain/note"
 )
 
 func TestNoteRepository_UpdateStatus(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	baseRow := &sqldb.Note{
+	baseRow := &generated.Note{
 		ID:         pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Title:      "t",
 		TemplateID: pgtype.UUID{Bytes: [16]byte{2}, Valid: true},
@@ -29,7 +29,7 @@ func TestNoteRepository_UpdateStatus(t *testing.T) {
 	tests := []struct {
 		name    string
 		id      string
-		row     *sqldb.Note
+		row     *generated.Note
 		rowErr  error
 		wantErr error
 	}{
@@ -41,7 +41,7 @@ func TestNoteRepository_UpdateStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewNoteDBTX(tt.row, tt.rowErr, nil)
-			repo := &NoteRepository{queries: sqldb.New(mock)}
+			repo := &NoteRepository{queries: generated.New(mock)}
 			_, err := repo.UpdateStatus(context.Background(), tt.id, note.StatusPublish)
 			if tt.wantErr == nil {
 				if err != nil {
@@ -76,7 +76,7 @@ func TestNoteRepository_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewNoteDBTX(nil, nil, tt.execErr)
-			repo := &NoteRepository{queries: sqldb.New(mock)}
+			repo := &NoteRepository{queries: generated.New(mock)}
 			err := repo.Delete(context.Background(), tt.id)
 			if tt.wantErr {
 				if err == nil {
@@ -91,7 +91,7 @@ func TestNoteRepository_Delete(t *testing.T) {
 
 func TestNoteRepository_Create(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	row := &sqldb.Note{
+	row := &generated.Note{
 		ID:         pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Title:      "t",
 		TemplateID: pgtype.UUID{Bytes: [16]byte{2}, Valid: true},
@@ -103,7 +103,7 @@ func TestNoteRepository_Create(t *testing.T) {
 	tests := []struct {
 		name      string
 		note      note.Note
-		row       *sqldb.Note
+		row       *generated.Note
 		rowErr    error
 		wantErr   bool
 		wantTitle string
@@ -130,7 +130,7 @@ func TestNoteRepository_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewNoteDBTX(tt.row, tt.rowErr, nil)
-			repo := &NoteRepository{queries: sqldb.New(mock)}
+			repo := &NoteRepository{queries: generated.New(mock)}
 			n, err := repo.Create(context.Background(), tt.note)
 			if tt.wantErr {
 				if err == nil {
@@ -150,7 +150,7 @@ func TestNoteRepository_Create(t *testing.T) {
 
 func TestNoteRepository_Get(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	baseRow := &sqldb.Note{
+	baseRow := &generated.Note{
 		ID:         pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Title:      "t",
 		TemplateID: pgtype.UUID{Bytes: [16]byte{2}, Valid: true},
@@ -159,10 +159,10 @@ func TestNoteRepository_Get(t *testing.T) {
 		CreatedAt:  pgtype.Timestamptz{Time: now, Valid: true},
 		UpdatedAt:  pgtype.Timestamptz{Time: now, Valid: true},
 	}
-	sections := []*sqldb.Section{
+	sections := []*generated.Section{
 		{ID: pgtype.UUID{Bytes: [16]byte{9}, Valid: true}, NoteID: baseRow.ID, FieldID: pgtype.UUID{Bytes: [16]byte{8}, Valid: true}, Content: "c"},
 	}
-	detail := &sqldb.GetNoteByIDRow{
+	detail := &generated.GetNoteByIDRow{
 		ID:             baseRow.ID,
 		Title:          baseRow.Title,
 		TemplateID:     baseRow.TemplateID,
@@ -178,8 +178,8 @@ func TestNoteRepository_Get(t *testing.T) {
 	tests := []struct {
 		name      string
 		id        string
-		row       *sqldb.Note
-		getRow    *sqldb.GetNoteByIDRow
+		row       *generated.Note
+		getRow    *generated.GetNoteByIDRow
 		rowErr    error
 		queryErr  error
 		wantErr   error
@@ -194,7 +194,7 @@ func TestNoteRepository_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewNoteDBTX(tt.row, tt.rowErr, nil).WithGetRow(tt.getRow).WithList(nil, sections, tt.queryErr)
-			repo := &NoteRepository{queries: sqldb.New(mock)}
+			repo := &NoteRepository{queries: generated.New(mock)}
 			got, err := repo.Get(context.Background(), tt.id)
 			if tt.wantErr == nil {
 				if err != nil {
@@ -217,7 +217,7 @@ func TestNoteRepository_Get(t *testing.T) {
 
 func TestNoteRepository_Update(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	row := &sqldb.Note{
+	row := &generated.Note{
 		ID:         pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Title:      "t2",
 		TemplateID: pgtype.UUID{Bytes: [16]byte{2}, Valid: true},
@@ -229,7 +229,7 @@ func TestNoteRepository_Update(t *testing.T) {
 	tests := []struct {
 		name    string
 		note    note.Note
-		row     *sqldb.Note
+		row     *generated.Note
 		rowErr  error
 		wantErr error
 	}{
@@ -241,7 +241,7 @@ func TestNoteRepository_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewNoteDBTX(tt.row, tt.rowErr, nil)
-			repo := &NoteRepository{queries: sqldb.New(mock)}
+			repo := &NoteRepository{queries: generated.New(mock)}
 			got, err := repo.Update(context.Background(), tt.note)
 			if tt.wantErr == nil {
 				if err != nil {
@@ -264,7 +264,7 @@ func TestNoteRepository_Update(t *testing.T) {
 
 func TestNoteRepository_List(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	noteRow := &sqldb.ListNotesRow{
+	noteRow := &generated.ListNotesRow{
 		ID:             pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Title:          "t",
 		TemplateID:     pgtype.UUID{Bytes: [16]byte{2}, Valid: true},
@@ -277,24 +277,24 @@ func TestNoteRepository_List(t *testing.T) {
 		LastName:       "Yamada",
 		OwnerThumbnail: pgtype.Text{String: "thumb", Valid: true},
 	}
-	sections := []*sqldb.Section{
+	sections := []*generated.Section{
 		{ID: pgtype.UUID{Bytes: [16]byte{9}, Valid: true}, NoteID: noteRow.ID, FieldID: pgtype.UUID{Bytes: [16]byte{8}, Valid: true}, Content: "c"},
 	}
 	tests := []struct {
 		name     string
-		notes    []*sqldb.ListNotesRow
-		sections []*sqldb.Section
+		notes    []*generated.ListNotesRow
+		sections []*generated.Section
 		queryErr error
 		wantErr  bool
 	}{
-		{name: "[Success] list notes", notes: []*sqldb.ListNotesRow{noteRow}, sections: sections},
+		{name: "[Success] list notes", notes: []*generated.ListNotesRow{noteRow}, sections: sections},
 		{name: "[Fail] query error", queryErr: errors.New("db error"), wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewNoteDBTX(nil, nil, nil).WithList(tt.notes, tt.sections, tt.queryErr)
-			repo := &NoteRepository{queries: sqldb.New(mock)}
+			repo := &NoteRepository{queries: generated.New(mock)}
 			_, err := repo.List(context.Background(), note.Filters{})
 			if tt.wantErr {
 				if err == nil {
@@ -310,13 +310,13 @@ func TestNoteRepository_List(t *testing.T) {
 func TestNoteRepository_ReplaceSections(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	noteID := pgtype.UUID{Bytes: [16]byte{1}, Valid: true}
-	existingSection := &sqldb.Section{
+	existingSection := &generated.Section{
 		ID:      pgtype.UUID{Bytes: [16]byte{9}, Valid: true},
 		NoteID:  noteID,
 		FieldID: pgtype.UUID{Bytes: [16]byte{8}, Valid: true},
 		Content: "old",
 	}
-	newSection := &sqldb.Section{
+	newSection := &generated.Section{
 		ID:      pgtype.UUID{Bytes: [16]byte{7}, Valid: true},
 		NoteID:  noteID,
 		FieldID: pgtype.UUID{Bytes: [16]byte{6}, Valid: true},
@@ -327,7 +327,7 @@ func TestNoteRepository_ReplaceSections(t *testing.T) {
 		name     string
 		noteID   string
 		sections []note.Section
-		secRow   *sqldb.Section
+		secRow   *generated.Section
 		rowErr   error
 		wantErr  bool
 	}{
@@ -378,7 +378,7 @@ func TestNoteRepository_ReplaceSections(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewNoteDBTX(nil, tt.rowErr, nil).WithSectionRow(tt.secRow)
-			repo := &NoteRepository{queries: sqldb.New(mock)}
+			repo := &NoteRepository{queries: generated.New(mock)}
 			err := repo.ReplaceSections(context.Background(), tt.noteID, tt.sections)
 			if tt.wantErr {
 				if err == nil {
