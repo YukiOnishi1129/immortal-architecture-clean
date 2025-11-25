@@ -374,7 +374,7 @@ func (u *NoteInteractor) Get(ctx context.Context, id string) error {
 #### ④ Repository
 
 ```go
-// internal/adapter/gateway/db/note_repository.go
+// internal/adapter/gateway/db/sqlc/note_repository.go
 func (r *NoteRepository) Get(ctx context.Context, id string) (*note.WithMeta, error) {
     // 1. string → pgtype.UUID に変換
     pgID, err := toUUID(id)
@@ -884,11 +884,13 @@ Option A: Portに置く (このプロジェクト)
 │  - TemplateRepository interface
 └────────────────┘
          ↑
-         │ 実装
-┌────────────────┐
-│ gateway/db/    │
+         │ 実装（ORM別）
+┌──────────────────────┐
+│ gateway/db/sqlc/     │  ← sqlc実装
 │  - NoteRepository struct
-└────────────────┘
+│ gateway/db/gorm/    │  ← GORM実装（準備済み）
+│  - AccountRepository struct
+└──────────────────────┘
 
 Option B: Domainに置く
 ┌────────────────┐
@@ -960,6 +962,106 @@ if errors.Is(err, pgx.ErrNoRows) {
     return nil, domainerr.ErrNotFound
 }
 ```
+
+---
+
+### Q6: HTTPとgRPCを両方サポートする場合の設計は？
+
+**A:** **このプロジェクトではHTTPとgRPCの両方をサポート**しています。
+
+```
+UseCase (ビジネスロジック) - 1つだけ
+    ↑                    ↑
+    │                    │
+HTTP Presenter      gRPC Presenter
+HTTP Controller     gRPC Controller
+    ↓                    ↓
+REST API            gRPC API
+```
+
+**ポイント:**
+- UseCaseは1つだけ（共通のビジネスロジック）
+- Presenter/Controllerをプロトコルごとに用意
+- Factoryもプロトコルごとに分ける（`factory/http/`、`factory/grpc/`）
+
+```go
+// HTTP Presenterの例
+// internal/adapter/http/presenter/account_presenter.go
+func (p *AccountPresenter) PresentAccount(ctx context.Context, acc *account.Account) error {
+    // OpenAPI型に変換
+    p.account = toOpenAPIAccount(acc)
+    return nil
+}
+
+// gRPC Presenterの例
+// internal/adapter/grpc/presenter/account_presenter.go
+func (p *AccountPresenter) PresentAccount(ctx context.Context, acc *account.Account) error {
+    // Protobuf型に変換
+    p.response = toProtobufAccount(acc)
+    return nil
+}
+```
+
+**メリット:**
+- ビジネスロジックを重複させない
+- プロトコル固有の変換は各Adapterで吸収
+- テストも共通化できる
+
+---
+
+### Q7: ORMを切り替えるにはどうする？
+
+**A:** **このプロジェクトはORM切り替えに対応**しています。
+
+現在の構成:
+```
+internal/adapter/gateway/db/
+├── sqlc/              # sqlc実装（現在使用中）
+│   ├── account_repository.go
+│   ├── note_repository.go
+│   └── template_repository.go
+└── gorm/              # GORM実装（準備済み）
+    └── account_repository.go
+```
+
+**切り替え手順（3ステップ）:**
+
+1. **import文の切り替え**
+   ```go
+   // internal/driver/factory/repository_factory.go
+   import (
+       "github.com/jackc/pgx/v5/pgxpool"
+
+       "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
+       // "immortal-architecture-clean/backend/internal/adapter/gateway/db/gorm"  ← コメント外す
+       "immortal-architecture-clean/backend/internal/port"
+   )
+   ```
+
+2. **Factory関数の修正**
+   ```go
+   func NewAccountRepoFactory(pool *pgxpool.Pool) func() port.AccountRepository {
+       return func() port.AccountRepository {
+           // Current: sqlc実装
+           return sqlc.NewAccountRepository(pool)
+
+           // To switch to GORM, replace above with:
+           // return gorm.NewAccountRepository(db)
+       }
+   }
+   ```
+
+3. **DB接続の変更**（sqlc用のpoolからGORM用のdbへ）
+   ```go
+   // internal/driver/initializer/api/initializer.go
+   // pool, err := driverdb.NewPool(ctx, cfg.DatabaseURL)  // sqlc用
+   db, err := gorm.Open(postgres.Open(cfg.DatabaseURL))   // GORM用
+   ```
+
+**重要:**
+- **Domain、UseCase、Controller、Presenterは変更不要**
+- Gateway層だけ差し替えればOK
+- これがクリーンアーキテクチャの変更可能性！
 
 ---
 
@@ -1056,14 +1158,24 @@ backend-clean/
 │   │   │   └── generated/
 │   │   │       └── openapi/             # OpenAPI生成物
 │   │   │           └── server.gen.go
+│   │   ├── grpc/
+│   │   │   ├── controller/              # gRPCハンドラ
+│   │   │   │   └── account_controller.go
+│   │   │   ├── presenter/               # gRPCレスポンス変換
+│   │   │   │   └── account_presenter.go
+│   │   │   └── generated/
+│   │   │       └── accountpb/           # protobuf生成物
 │   │   └── gateway/
 │   │       ├── db/                      # DB Repository
-│   │       │   ├── note_repository.go
-│   │       │   ├── template_repository.go
-│   │       │   ├── account_repository.go
-│   │       │   ├── sqlc/                # sqlc生成物
-│   │       │   ├── queries/             # SQLクエリ
-│   │       │   └── mock/
+│   │       │   ├── sqlc/                # sqlc実装
+│   │       │   │   ├── note_repository.go
+│   │       │   │   ├── template_repository.go
+│   │       │   │   ├── account_repository.go
+│   │       │   │   ├── generated/       # sqlc生成物
+│   │       │   │   ├── queries/         # SQLクエリ
+│   │       │   │   └── mock/
+│   │       │   └── gorm/                # GORM実装（準備済み）
+│   │       │       └── account_repository.go
 │   │       └── externalapi/             # 外部API (将来用)
 │   │
 │   └── driver/                          # 🔧 配線・初期化
@@ -1073,12 +1185,17 @@ backend-clean/
 │       │   └── tx.go
 │       ├── factory/                     # Factory関数
 │       │   ├── usecase_factory.go
-│       │   ├── presenter_factory.go
-│       │   ├── repository_factory.go
-│       │   └── tx_factory.go
+│       │   ├── repository_factory.go    # ORM切り替えポイント
+│       │   ├── tx_factory.go
+│       │   ├── http/                    # HTTP専用Factory
+│       │   │   └── presenter_factory.go
+│       │   └── grpc/                    # gRPC専用Factory
+│       │       └── presenter_factory.go
 │       └── initializer/
-│           └── api/
-│               └── initializer.go       # 全体の組み立て
+│           ├── api/
+│           │   └── initializer.go       # HTTP API組み立て
+│           └── grpc/
+│               └── initializer.go       # gRPCサーバー組み立て
 │
 ├── migrations/                          # DBマイグレーション
 ├── docs/                                # ドキュメント
