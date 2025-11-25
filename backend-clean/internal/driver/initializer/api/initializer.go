@@ -3,29 +3,28 @@ package initializer
 
 import (
 	"context"
-	"errors"
-	"os"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
 	httpcontroller "immortal-architecture-clean/backend/internal/adapter/http/controller"
 	openapi "immortal-architecture-clean/backend/internal/adapter/http/generated/openapi"
+	"immortal-architecture-clean/backend/internal/driver/config"
 	driverdb "immortal-architecture-clean/backend/internal/driver/db"
 	"immortal-architecture-clean/backend/internal/driver/factory"
+	httpfactory "immortal-architecture-clean/backend/internal/driver/factory/http"
 )
 
-// BuildServer composes all dependencies and returns an Echo server and cleanup function.
-func BuildServer(ctx context.Context) (*echo.Echo, func(), error) {
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		return nil, func() {}, errors.New("DATABASE_URL is not set")
+// BuildServer composes all dependencies and returns an Echo server, config, and cleanup function.
+func BuildServer(ctx context.Context) (*echo.Echo, *config.Config, func(), error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, nil, func() {}, err
 	}
 
-	pool, err := driverdb.NewPool(ctx, dbURL)
+	pool, err := driverdb.NewPool(ctx, cfg.DatabaseURL)
 	if err != nil {
-		return nil, func() {}, err
+		return nil, nil, func() {}, err
 	}
 	cleanup := func() {
 		pool.Close()
@@ -38,9 +37,9 @@ func BuildServer(ctx context.Context) (*echo.Echo, func(), error) {
 	noteRepoFactory := factory.NewNoteRepoFactory(pool)
 	txFactory := factory.NewTxFactory(txMgr)
 
-	accountOutputFactory := factory.NewAccountOutputFactory()
-	templateOutputFactory := factory.NewTemplateOutputFactory()
-	noteOutputFactory := factory.NewNoteOutputFactory()
+	accountOutputFactory := httpfactory.NewAccountOutputFactory()
+	templateOutputFactory := httpfactory.NewTemplateOutputFactory()
+	noteOutputFactory := httpfactory.NewNoteOutputFactory()
 
 	accountInputFactory := factory.NewAccountInputFactory()
 	templateInputFactory := factory.NewTemplateInputFactory()
@@ -50,7 +49,7 @@ func BuildServer(ctx context.Context) (*echo.Echo, func(), error) {
 
 	// Allow frontend (localhost:3000) to call the API during development.
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: allowedOrigins(),
+		AllowOrigins: cfg.AllowedOrigins,
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.PATCH, echo.OPTIONS},
 		AllowHeaders: []string{
 			echo.HeaderOrigin,
@@ -66,23 +65,5 @@ func BuildServer(ctx context.Context) (*echo.Echo, func(), error) {
 	server := httpcontroller.NewServer(ac, nc, tc)
 	openapi.RegisterHandlers(e, server)
 
-	return e, cleanup, nil
-}
-
-func allowedOrigins() []string {
-	fromEnv := os.Getenv("CLIENT_ORIGIN")
-	if strings.TrimSpace(fromEnv) == "" {
-		return []string{"http://localhost:3000", "http://127.0.0.1:3000"}
-	}
-	parts := strings.Split(fromEnv, ",")
-	origins := make([]string, 0, len(parts))
-	for _, p := range parts {
-		if trimmed := strings.TrimSpace(p); trimmed != "" {
-			origins = append(origins, trimmed)
-		}
-	}
-	if len(origins) == 0 {
-		return []string{"http://localhost:3000", "http://127.0.0.1:3000"}
-	}
-	return origins
+	return e, cfg, cleanup, nil
 }

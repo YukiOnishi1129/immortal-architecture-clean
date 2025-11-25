@@ -1,4 +1,4 @@
-package db
+package sqlc
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	mockdb "immortal-architecture-clean/backend/internal/adapter/gateway/db/mock"
-	sqldb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
+	mockdb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/mock"
+	"immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/generated"
 	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/domain/template"
 )
 
 func TestTemplateRepository_Create(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	row := &sqldb.Template{
+	row := &generated.Template{
 		ID:        pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Name:      "tpl",
 		OwnerID:   pgtype.UUID{Bytes: [16]byte{2}, Valid: true},
@@ -26,7 +26,7 @@ func TestTemplateRepository_Create(t *testing.T) {
 	tests := []struct {
 		name    string
 		tpl     template.Template
-		row     *sqldb.Template
+		row     *generated.Template
 		rowErr  error
 		wantErr bool
 	}{
@@ -38,7 +38,7 @@ func TestTemplateRepository_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewTemplateDBTX(row, nil, tt.rowErr, nil)
-			repo := &TemplateRepository{queries: sqldb.New(mock)}
+			repo := &TemplateRepository{queries: generated.New(mock)}
 			got, err := repo.Create(context.Background(), tt.tpl)
 			if tt.wantErr {
 				if err == nil {
@@ -58,7 +58,7 @@ func TestTemplateRepository_Create(t *testing.T) {
 
 func TestTemplateRepository_Get(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	detail := &sqldb.GetTemplateByIDRow{
+	detail := &generated.GetTemplateByIDRow{
 		ID:             pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Name:           "tpl",
 		OwnerID:        pgtype.UUID{Bytes: [16]byte{2}, Valid: true},
@@ -71,7 +71,7 @@ func TestTemplateRepository_Get(t *testing.T) {
 	tests := []struct {
 		name    string
 		id      string
-		row     *sqldb.GetTemplateByIDRow
+		row     *generated.GetTemplateByIDRow
 		rowErr  error
 		wantErr error
 	}{
@@ -83,7 +83,7 @@ func TestTemplateRepository_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewTemplateDBTX(nil, tt.row, tt.rowErr, nil)
-			repo := &TemplateRepository{queries: sqldb.New(mock)}
+			repo := &TemplateRepository{queries: generated.New(mock)}
 			got, err := repo.Get(context.Background(), tt.id)
 			if tt.wantErr == nil {
 				if err != nil {
@@ -106,7 +106,7 @@ func TestTemplateRepository_Get(t *testing.T) {
 
 func TestTemplateRepository_Update(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
-	tplRow := &sqldb.Template{
+	tplRow := &generated.Template{
 		ID:        pgtype.UUID{Bytes: [16]byte{1}, Valid: true},
 		Name:      "tpl2",
 		OwnerID:   pgtype.UUID{Bytes: [16]byte{2}, Valid: true},
@@ -115,7 +115,7 @@ func TestTemplateRepository_Update(t *testing.T) {
 	tests := []struct {
 		name    string
 		tpl     template.Template
-		row     *sqldb.Template
+		row     *generated.Template
 		rowErr  error
 		wantErr error
 	}{
@@ -127,7 +127,7 @@ func TestTemplateRepository_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewTemplateDBTX(tt.row, nil, tt.rowErr, nil)
-			repo := &TemplateRepository{queries: sqldb.New(mock)}
+			repo := &TemplateRepository{queries: generated.New(mock)}
 			got, err := repo.Update(context.Background(), tt.tpl)
 			if tt.wantErr == nil {
 				if err != nil {
@@ -164,7 +164,7 @@ func TestTemplateRepository_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewTemplateDBTX(nil, nil, nil, tt.execErr)
-			repo := &TemplateRepository{queries: sqldb.New(mock)}
+			repo := &TemplateRepository{queries: generated.New(mock)}
 			err := repo.Delete(context.Background(), tt.id)
 			if tt.wantErr {
 				if err == nil {
@@ -192,7 +192,7 @@ func TestTemplateRepository_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewTemplateDBTX(nil, nil, nil, nil)
 			mock.QueryErr = tt.queryErr
-			repo := &TemplateRepository{queries: sqldb.New(mock)}
+			repo := &TemplateRepository{queries: generated.New(mock)}
 			_, err := repo.List(context.Background(), template.Filters{})
 			if tt.wantErr {
 				if err == nil {
@@ -209,7 +209,7 @@ func TestTemplateRepository_List(t *testing.T) {
 func TestTemplateRepository_ReplaceFields(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	tplID := pgtype.UUID{Bytes: [16]byte{1}, Valid: true}
-	fieldRow := &sqldb.Field{
+	fieldRow := &generated.Field{
 		ID:         pgtype.UUID{Bytes: [16]byte{2}, Valid: true},
 		TemplateID: tplID,
 		Label:      "lbl",
@@ -234,7 +234,7 @@ func TestTemplateRepository_ReplaceFields(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := mockdb.NewTemplateDBTX(nil, nil, tt.rowErr, tt.execErr)
 			mock.FieldRow = fieldRow
-			repo := &TemplateRepository{queries: sqldb.New(mock)}
+			repo := &TemplateRepository{queries: generated.New(mock)}
 			err := repo.ReplaceFields(context.Background(), tt.tplID, []template.Field{tt.field})
 			if tt.wantErr {
 				if err == nil {

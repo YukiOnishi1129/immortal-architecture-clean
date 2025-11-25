@@ -3,7 +3,7 @@
 //   sqlc v1.30.0
 // source: notes.sql
 
-package sqldb
+package generated
 
 import (
 	"context"

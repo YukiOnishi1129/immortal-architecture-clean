@@ -1,4 +1,4 @@
-package db
+package sqlc
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	sqldb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
+	"immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/generated"
 	driverdb "immortal-architecture-clean/backend/internal/driver/db"
 )
 
@@ -44,7 +44,7 @@ func nullableTextToString(t pgtype.Text) string {
 	return t.String
 }
 
-func queriesForContext(ctx context.Context, q *sqldb.Queries) *sqldb.Queries {
+func queriesForContext(ctx context.Context, q *generated.Queries) *generated.Queries {
 	if tx := driverdb.TxFromContext(ctx); tx != nil {
 		return q.WithTx(tx)
 	}

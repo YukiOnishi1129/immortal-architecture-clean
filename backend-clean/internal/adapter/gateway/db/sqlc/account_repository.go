@@ -1,5 +1,5 @@
-// Package db implements gateway repositories.
-package db
+// Package sqlc implements gateway repositories using sqlc.
+package sqlc
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	sqldb "immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc"
+	"immortal-architecture-clean/backend/internal/adapter/gateway/db/sqlc/generated"
 	"immortal-architecture-clean/backend/internal/domain/account"
 	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
 	"immortal-architecture-clean/backend/internal/port"
@@ -18,7 +18,7 @@ import (
 // AccountRepository implements account persistence.
 type AccountRepository struct {
 	pool    *pgxpool.Pool
-	queries *sqldb.Queries
+	queries *generated.Queries
 }
 
 var _ port.AccountRepository = (*AccountRepository)(nil)
@@ -27,7 +27,7 @@ var _ port.AccountRepository = (*AccountRepository)(nil)
 func NewAccountRepository(pool *pgxpool.Pool) *AccountRepository {
 	return &AccountRepository{
 		pool:    pool,
-		queries: sqldb.New(pool),
+		queries: generated.New(pool),
 	}
 }
 
@@ -35,7 +35,7 @@ func NewAccountRepository(pool *pgxpool.Pool) *AccountRepository {
 func (r *AccountRepository) UpsertOAuthAccount(ctx context.Context, input account.OAuthAccountInput) (*account.Account, error) {
 	q := queriesForContext(ctx, r.queries)
 
-	row, err := q.UpsertAccount(ctx, &sqldb.UpsertAccountParams{
+	row, err := q.UpsertAccount(ctx, &generated.UpsertAccountParams{
 		Email:             input.Email,
 		FirstName:         input.FirstName,
 		LastName:          input.LastName,
@@ -77,7 +77,7 @@ func (r *AccountRepository) GetByEmail(ctx context.Context, email string) (*acco
 	return toDomainAccount(row)
 }
 
-func toDomainAccount(a *sqldb.Account) (*account.Account, error) {
+func toDomainAccount(a *generated.Account) (*account.Account, error) {
 	var lastLogin *time.Time
 	if a.LastLoginAt.Valid {
 		t := timestamptzToTime(a.LastLoginAt)

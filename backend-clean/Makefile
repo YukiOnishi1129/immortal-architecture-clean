@@ -10,6 +10,9 @@ TEST_FLAGS ?= -count=1
 OAPI_CODEGEN ?= oapi-codegen
 OPENAPI_SPEC ?= ../api-schema/generated/openapi.yaml
 OAPI_CONFIG ?= oapi-codegen.yaml
+PROTOC ?= protoc
+PROTO_DIR ?= ../proto
+PROTO_OUT_DIR ?= internal/adapter/grpc/generated
 MIGRATE ?= migrate
 MIGRATIONS_DIR ?= migrations
 NAME ?=
@@ -69,9 +72,37 @@ oapi:
 	@test -f $(OPENAPI_SPEC) || (echo "OpenAPI spec not found at $(OPENAPI_SPEC). Run api-schema/scripts/generate-openapi.sh first."; exit 1)
 	$(OAPI_CODEGEN) --config $(OAPI_CONFIG) $(OPENAPI_SPEC)
 
+.PHONY: proto
+proto:
+	@mkdir -p $(PROTO_OUT_DIR)/accountpb
+	@export PATH="$$HOME/.local/bin:$$(go env GOPATH)/bin:$$PATH"; \
+	$(PROTOC) \
+		--go_out=. \
+		--go_opt=module=immortal-architecture-clean/backend \
+		--go-grpc_out=. \
+		--go-grpc_opt=module=immortal-architecture-clean/backend \
+		-I .. \
+		$(PROTO_DIR)/account.proto
+
 .PHONY: build
 build:
 	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) go build ./...
+
+.PHONY: build-api
+build-api:
+	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) go build -o bin/api ./cmd/api
+
+.PHONY: build-grpc
+build-grpc:
+	@GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) go build -o bin/grpc ./cmd/grpc
+
+.PHONY: run-api
+run-api:
+	@go run ./cmd/api/main.go
+
+.PHONY: run-grpc
+run-grpc:
+	@go run ./cmd/grpc/main.go
 
 .PHONY: migrate-up
 migrate-up:
