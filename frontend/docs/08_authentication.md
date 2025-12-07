@@ -6,14 +6,14 @@ Better Auth を使用した認証システム。Google OAuth 2.0 による認証
 
 ## 技術スタック
 
-| 項目             | 技術                                |
-| ---------------- | ----------------------------------- |
-| 認証ライブラリ   | Better Auth                         |
-| OAuth プロバイダ | Google OAuth 2.0                    |
-| セッション管理   | Stateless（Cookie ベース）          |
-| ユーザーデータ   | PostgreSQL（accounts テーブル）     |
+| 項目             | 技術                                  |
+| ---------------- | ------------------------------------- |
+| 認証ライブラリ   | Better Auth                           |
+| OAuth プロバイダ | Google OAuth 2.0                      |
+| セッション管理   | Stateless（Cookie ベース）            |
+| ユーザーデータ   | PostgreSQL（accounts テーブル）       |
 | キャッシュ       | Next.js unstable_cache + Cookie Cache |
-| トークン検証     | google-auth-library                 |
+| トークン検証     | google-auth-library                   |
 
 ## アーキテクチャ
 
@@ -163,7 +163,7 @@ plugins: [
 
     return { user, session, account };
   }),
-]
+];
 ```
 
 ### 6. セッション取得
@@ -228,6 +228,7 @@ declare module "better-auth" {
 ```
 
 これにより：
+
 - `session.account` でアカウント情報にアクセス可能
 - `session.error` でトークン関連エラーをハンドリング可能
 
@@ -333,12 +334,12 @@ GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-client-secret
 ```
 
-| 変数名 | 説明 |
-| ------ | ---- |
-| `NEXT_PUBLIC_APP_URL` | アプリケーションの公開 URL |
-| `BETTER_AUTH_URL` | Better Auth の認証 URL |
-| `BETTER_AUTH_SECRET` | セッション署名用のシークレットキー |
-| `GOOGLE_CLIENT_ID` | Google OAuth クライアント ID |
+| 変数名                 | 説明                                  |
+| ---------------------- | ------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`  | アプリケーションの公開 URL            |
+| `BETTER_AUTH_URL`      | Better Auth の認証 URL                |
+| `BETTER_AUTH_SECRET`   | セッション署名用のシークレットキー    |
+| `GOOGLE_CLIENT_ID`     | Google OAuth クライアント ID          |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth クライアントシークレット |
 
 ## データベーススキーマ
@@ -365,10 +366,10 @@ CREATE TABLE accounts (
 
 ### ユニーク制約
 
-| 制約                     | カラム                          | 目的                     |
-| ------------------------ | ------------------------------- | ------------------------ |
-| email (UNIQUE)           | email                           | メールアドレスの重複防止 |
-| provider_account_unique  | (provider, provider_account_id) | 同一プロバイダの重複防止 |
+| 制約                    | カラム                          | 目的                     |
+| ----------------------- | ------------------------------- | ------------------------ |
+| email (UNIQUE)          | email                           | メールアドレスの重複防止 |
+| provider_account_unique | (provider, provider_account_id) | 同一プロバイダの重複防止 |
 
 ## 重複アカウント処理
 
@@ -464,9 +465,9 @@ export function useHeader() {
   const queryClient = useQueryClient();
 
   const handleSignOut = useCallback(async () => {
-    await signOut();         // Better Auth のログアウト
-    queryClient.clear();     // TanStack Query キャッシュクリア
-    router.push("/login");   // ログインページへリダイレクト
+    await signOut(); // Better Auth のログアウト
+    queryClient.clear(); // TanStack Query キャッシュクリア
+    router.push("/login"); // ログインページへリダイレクト
   }, [router, queryClient]);
 
   return {
@@ -495,7 +496,7 @@ Better Auth クライアントから提供される `useSession` フックを使
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   plugins: [
-    customSessionClient<typeof auth>(),  // 型推論を有効化
+    customSessionClient<typeof auth>(), // 型推論を有効化
   ],
 });
 
@@ -556,14 +557,15 @@ export class TokenVerificationService {
 // external/client/google-auth/client.ts
 export const getGoogleOAuth2Client = () => {
   if (!oAuth2Client) {
-    const baseUrl = process.env.NEXTAUTH_URL ??
-                    process.env.NEXT_PUBLIC_APP_URL ??
-                    "http://localhost:3000";
+    const baseUrl =
+      process.env.NEXTAUTH_URL ??
+      process.env.NEXT_PUBLIC_APP_URL ??
+      "http://localhost:3000";
 
     oAuth2Client = new OAuth2Client(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      `${baseUrl}/api/auth/callback/google`,
+      `${baseUrl}/api/auth/callback/google`
     );
   }
   return oAuth2Client;
