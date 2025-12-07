@@ -42,7 +42,6 @@ export function useTemplateNewForm() {
 
         if (result?.id) {
           toast.success("テンプレートを作成しました");
-          router.refresh();
           router.push("/templates");
         }
       } catch (error) {

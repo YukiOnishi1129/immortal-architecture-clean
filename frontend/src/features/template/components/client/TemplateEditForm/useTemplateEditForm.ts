@@ -58,7 +58,6 @@ export function useTemplateEditForm(templateId: string) {
         });
 
         toast.success("テンプレートを更新しました");
-        router.refresh();
         router.push(`/templates/${templateId}`);
       } catch (error) {
         console.error("テンプレートの更新に失敗しました:", error);
