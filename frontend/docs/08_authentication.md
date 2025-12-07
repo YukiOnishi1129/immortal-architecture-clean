@@ -6,13 +6,14 @@ Better Auth を使用した認証システム。Google OAuth 2.0 による認証
 
 ## 技術スタック
 
-| 項目             | 技術                            |
-| ---------------- | ------------------------------- |
-| 認証ライブラリ   | Better Auth                     |
-| OAuth プロバイダ | Google OAuth 2.0                |
-| セッション管理   | Stateless（Cookie ベース）      |
-| ユーザーデータ   | PostgreSQL（accounts テーブル） |
-| キャッシュ       | Next.js unstable_cache          |
+| 項目             | 技術                                |
+| ---------------- | ----------------------------------- |
+| 認証ライブラリ   | Better Auth                         |
+| OAuth プロバイダ | Google OAuth 2.0                    |
+| セッション管理   | Stateless（Cookie ベース）          |
+| ユーザーデータ   | PostgreSQL（accounts テーブル）     |
+| キャッシュ       | Next.js unstable_cache + Cookie Cache |
+| トークン検証     | google-auth-library                 |
 
 ## アーキテクチャ
 
@@ -86,12 +87,16 @@ Better Auth を使用した認証システム。Google OAuth 2.0 による認証
 
 ```typescript
 // features/auth/components/client/LoginPageClient/useLoginClient.ts
-const handleLogin = async () => {
-  await signIn.social({
-    provider: "google",
-    callbackURL: "/notes", // ログイン後のリダイレクト先
-  });
-};
+export function useLoginClient() {
+  const handleGoogleLogin = useCallback(async () => {
+    await signIn.social({
+      provider: "google",
+      callbackURL: "/notes", // ログイン後のリダイレクト先
+    });
+  }, []);
+
+  return { handleGoogleLogin };
+}
 ```
 
 ### 2. Google OAuth 認証
@@ -123,7 +128,8 @@ socialProviders: {
       // accounts テーブルにユーザー情報を保存
       await createOrGetAccountCommand({
         email: ctx.user.email,
-        name: ctx.user.name || ctx.user.email,
+        firstName: ctx.user.name?.split(" ")[0] || ctx.user.email,
+        lastName: ctx.user.name?.split(" ").slice(1).join(" ") || "",
         provider: "google",
         providerAccountId: ctx.user.id,
         thumbnail: ctx.user.image || undefined,
@@ -137,18 +143,27 @@ socialProviders: {
 
 ```typescript
 // features/auth/lib/better-auth.ts
-customSession(async ({ user, session }) => {
-  // unstable_cache でDBアクセスをキャッシュ（5分）
-  let account = await getCachedAccount(user.email);
+plugins: [
+  customSession(async ({ user, session }) => {
+    // unstable_cache でDBアクセスをキャッシュ（5分）
+    let account = await getCachedAccount(user.email);
 
-  // アカウントが存在しない場合は作成（フォールバック）
-  if (!account) {
-    await createOrGetAccountCommand({ ... });
-    account = await getAccountByEmailQuery(user.email);
-  }
+    // アカウントが存在しない場合は作成（フォールバック）
+    if (!account) {
+      await createOrGetAccountCommand({
+        email: user.email,
+        firstName: user.name?.split(" ")[0] || user.email,
+        lastName: user.name?.split(" ").slice(1).join(" ") || "",
+        provider: "google",
+        providerAccountId: user.id,
+        thumbnail: user.image || undefined,
+      });
+      account = await getAccountByEmailQuery(user.email);
+    }
 
-  return { user, session, account };
-})
+    return { user, session, account };
+  }),
+]
 ```
 
 ### 6. セッション取得
@@ -202,11 +217,19 @@ session: {
 declare module "better-auth" {
   interface Session {
     account?: Account;
+    error?: "RefreshTokenMissing" | "RefreshAccessTokenError";
+  }
+
+  interface User {
+    id: string;
+    account?: Account;
   }
 }
 ```
 
-これにより `session.account` でアカウント情報にアクセス可能。
+これにより：
+- `session.account` でアカウント情報にアクセス可能
+- `session.error` でトークン関連エラーをハンドリング可能
 
 ## 認証ガード
 
@@ -214,71 +237,138 @@ declare module "better-auth" {
 
 ```typescript
 // features/auth/servers/redirect.server.ts
-export async function requireAuthServer(): Promise<Session> {
+
+// 認証が必須 - セッションがなければログインページへリダイレクト
+export const requireAuthServer = async () => {
   const session = await getSessionServer();
-  if (!session?.account?.id) {
+  if (!session?.account || session.error) {
+    redirect("/login");
+  }
+};
+
+// 認証済みセッションを取得 - なければリダイレクト
+export const getAuthenticatedSessionServer = async () => {
+  const session = await getSessionServer();
+  if (!session?.account || session.error) {
     redirect("/login");
   }
   return session;
+};
+
+// 認証済みならリダイレクト - ログインページでの使用
+export const redirectIfAuthenticatedServer = async () => {
+  const session = await getSessionServer();
+  if (session?.account && !session.error) {
+    redirect("/notes");
+  }
+};
+```
+
+### 認証チェック（リダイレクトなし）
+
+```typescript
+// features/auth/servers/auth-check.server.ts
+export async function checkAuthAndRefreshServer(): Promise<boolean> {
+  const account = await getSessionServer();
+  return Boolean(account);
 }
+```
+
+### レイアウトラッパー
+
+```typescript
+// shared/components/layout/server/AuthenticatedLayoutWrapper/AuthenticatedLayoutWrapper.tsx
+export async function AuthenticatedLayoutWrapper({ children }) {
+  await requireAuthServer();
+
+  return (
+    <div className="flex h-screen bg-background">
+      <Sidebar />
+      <div className="flex flex-1 flex-col">
+        <Header />
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+```
+
+```typescript
+// shared/components/layout/server/GuestLayoutWrapper/GuestLayoutWrapper.tsx
+export const GuestLayoutWrapper = async ({ children }) => {
+  await redirectIfAuthenticatedServer();
+  return <>{children}</>;
+};
 ```
 
 ### 使用例
 
 ```typescript
-// app/(authenticated)/notes/page.tsx
-export default async function NotesPage() {
-  const session = await requireAuthServer();
-  // session.account.id が保証されている
+// app/(authenticated)/layout.tsx
+export default function AuthenticatedPageLayout({ children }) {
+  return <AuthenticatedLayoutWrapper>{children}</AuthenticatedLayoutWrapper>;
+}
+
+// app/(guest)/layout.tsx
+export default function GuestPageLayout({ children }) {
+  return <GuestLayoutWrapper>{children}</GuestLayoutWrapper>;
 }
 ```
 
 ## 環境変数
 
 ```env
+# API
+API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Better Auth
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=your-secret-key
+
 # Google OAuth
 GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-client-secret
-
-# Better Auth
-NEXTAUTH_URL=http://localhost:3000
-BETTER_AUTH_SECRET=your-secret-key
 ```
+
+| 変数名 | 説明 |
+| ------ | ---- |
+| `NEXT_PUBLIC_APP_URL` | アプリケーションの公開 URL |
+| `BETTER_AUTH_URL` | Better Auth の認証 URL |
+| `BETTER_AUTH_SECRET` | セッション署名用のシークレットキー |
+| `GOOGLE_CLIENT_ID` | Google OAuth クライアント ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth クライアントシークレット |
 
 ## データベーススキーマ
 
-```typescript
-// external/client/database/schema.ts
-export const accounts = pgTable(
-  "accounts",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    email: text("email").notNull(),
-    firstName: text("first_name").notNull(),
-    lastName: text("last_name").notNull(),
-    provider: text("provider").notNull(),
-    providerAccountId: text("provider_account_id").notNull(),
-    thumbnail: text("thumbnail"),
-    lastLoginAt: timestamp("last_login_at"),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
-  },
-  (table) => ({
-    emailIdx: uniqueIndex("accounts_email_idx").on(table.email),
-    providerIdx: uniqueIndex("accounts_provider_idx").on(
-      table.provider,
-      table.providerAccountId
-    ),
-  })
+マイグレーションは backend-clean 側で管理されています。
+
+```sql
+-- backend-clean/migrations/20250209000000_init_schema.up.sql
+CREATE TABLE accounts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL UNIQUE,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    provider TEXT NOT NULL,
+    provider_account_id TEXT NOT NULL,
+    thumbnail TEXT,
+    last_login_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT provider_account_unique UNIQUE (provider, provider_account_id)
 );
 ```
 
 ### ユニーク制約
 
-| 制約                  | カラム                          | 目的                     |
-| --------------------- | ------------------------------- | ------------------------ |
-| accounts_email_idx    | email                           | メールアドレスの重複防止 |
-| accounts_provider_idx | (provider, provider_account_id) | 同一プロバイダの重複防止 |
+| 制約                     | カラム                          | 目的                     |
+| ------------------------ | ------------------------------- | ------------------------ |
+| email (UNIQUE)           | email                           | メールアドレスの重複防止 |
+| provider_account_unique  | (provider, provider_account_id) | 同一プロバイダの重複防止 |
 
 ## 重複アカウント処理
 
@@ -309,24 +399,175 @@ export const accounts = pgTable(
 ```
 features/auth/
 ├── lib/
-│   ├── better-auth.ts        # サーバー側設定
-│   └── better-auth-client.ts # クライアント側設定
+│   ├── better-auth.ts          # サーバー側設定（auth, customSession）
+│   └── better-auth-client.ts   # クライアント側設定（authClient, signIn, signOut, useSession）
 ├── servers/
-│   ├── auth.server.ts        # getSessionServer
-│   └── redirect.server.ts    # requireAuthServer
+│   ├── auth.server.ts          # getSessionServer
+│   ├── auth-check.server.ts    # checkAuthAndRefreshServer
+│   └── redirect.server.ts      # requireAuthServer, getAuthenticatedSessionServer, redirectIfAuthenticatedServer
 ├── types/
-│   └── better-auth.d.ts      # 型定義（Module Augmentation）
-├── components/
-│   ├── client/
-│   │   └── LoginPageClient/  # ログインUI
-│   └── server/
-│       └── LoginPageTemplate/
-└── hooks/
-    └── useSession.ts         # クライアント用フック
+│   └── better-auth.d.ts        # 型定義（Module Augmentation）
+└── components/
+    ├── client/
+    │   └── LoginPageClient/    # ログインUI
+    │       ├── useLoginClient.ts
+    │       ├── LoginClientContainer.tsx
+    │       └── LoginClientPresenter.tsx
+    └── server/
+        └── LoginPageTemplate/
 
-external/handler/account/
-├── account.command.server.ts # createOrGetAccountCommand
-└── account.query.server.ts   # getAccountByEmailQuery
+features/account/
+└── types/
+    └── index.ts                # Account 型定義
+
+shared/components/layout/
+├── client/
+│   └── Header/
+│       ├── Header.tsx
+│       └── useHeader.ts        # ログアウト処理、ユーザー情報取得
+└── server/
+    ├── AuthenticatedLayoutWrapper/  # 認証済みユーザー用レイアウト
+    └── GuestLayoutWrapper/          # 未認証ユーザー用レイアウト
+
+external/
+├── handler/
+│   ├── auth/
+│   │   └── token.command.server.ts   # refreshGoogleTokenCommand
+│   └── account/
+│       ├── account.command.server.ts # createOrGetAccountCommand, updateAccountCommand
+│       └── account.query.server.ts   # getCurrentAccountQuery, getAccountByEmailQuery
+├── service/auth/
+│   └── token-verification.service.ts # TokenVerificationService（トークン検証・リフレッシュ）
+└── client/google-auth/
+    └── client.ts                     # Google OAuth2 クライアント
+
+app/
+├── api/auth/[...all]/
+│   └── route.ts              # Better Auth API ハンドラー
+├── (authenticated)/          # 認証済みユーザー用ルート
+│   ├── layout.tsx
+│   ├── notes/
+│   ├── my-notes/
+│   └── templates/
+└── (guest)/                  # 未認証ユーザー用ルート
+    ├── layout.tsx
+    └── login/
+```
+
+## ログアウト処理
+
+```typescript
+// shared/components/layout/client/Header/useHeader.ts
+export function useHeader() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const handleSignOut = useCallback(async () => {
+    await signOut();         // Better Auth のログアウト
+    queryClient.clear();     // TanStack Query キャッシュクリア
+    router.push("/login");   // ログインページへリダイレクト
+  }, [router, queryClient]);
+
+  return {
+    userName: session?.user?.name,
+    userEmail: session?.user?.email,
+    userImage: session?.user?.image,
+    handleSignOut,
+  };
+}
+```
+
+### ログアウト時の処理フロー
+
+1. `signOut()` - Better Auth のセッションクッキーを削除
+2. `queryClient.clear()` - TanStack Query のキャッシュを完全クリア
+3. `router.push("/login")` - ログインページへリダイレクト
+
+## クライアントフック
+
+### useSession
+
+Better Auth クライアントから提供される `useSession` フックを使用してセッション情報を取得。
+
+```typescript
+// features/auth/lib/better-auth-client.ts
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  plugins: [
+    customSessionClient<typeof auth>(),  // 型推論を有効化
+  ],
+});
+
+export const { signIn, signOut, useSession } = authClient;
+```
+
+### 使用例
+
+```typescript
+const { data: session, isPending } = useSession();
+
+if (isPending) return <Loading />;
+if (!session) return <LoginButton />;
+
+return <div>Welcome, {session.user.name}</div>;
+```
+
+## トークン管理
+
+### Google トークン検証サービス
+
+```typescript
+// external/service/auth/token-verification.service.ts
+export class TokenVerificationService {
+  async verifyIdToken(idToken: string): Promise<TokenPayload> {
+    const ticket = await getGoogleOAuth2Client().verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID || "",
+    });
+    const payload = ticket.getPayload();
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      emailVerified: payload.email_verified,
+      name: payload.name,
+      picture: payload.picture,
+      isValid: true,
+    };
+  }
+
+  async refreshTokens(refreshToken: string) {
+    getGoogleOAuth2Client().setCredentials({
+      refresh_token: refreshToken,
+    });
+    const { credentials } = await getGoogleOAuth2Client().refreshAccessToken();
+    return {
+      accessToken: credentials.access_token,
+      idToken: credentials.id_token,
+      expiryDate: credentials.expiry_date,
+    };
+  }
+}
+```
+
+### Google OAuth2 クライアント
+
+```typescript
+// external/client/google-auth/client.ts
+export const getGoogleOAuth2Client = () => {
+  if (!oAuth2Client) {
+    const baseUrl = process.env.NEXTAUTH_URL ??
+                    process.env.NEXT_PUBLIC_APP_URL ??
+                    "http://localhost:3000";
+
+    oAuth2Client = new OAuth2Client(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      `${baseUrl}/api/auth/callback/google`,
+    );
+  }
+  return oAuth2Client;
+};
 ```
 
 ## トラブルシューティング
@@ -335,7 +576,7 @@ external/handler/account/
 
 1. Cookie が正しく設定されているか確認
 2. `BETTER_AUTH_SECRET` が設定されているか確認
-3. `NEXTAUTH_URL` が正しいか確認
+3. `BETTER_AUTH_URL` が正しいか確認
 
 ### アカウントが作成されない
 
@@ -348,3 +589,9 @@ external/handler/account/
 1. `getAccountByEmailQuery` が null を返していないか確認
 2. unstable_cache のタグが正しいか確認
 3. handler → service → repository の呼び出し順序を確認
+
+### ログアウト後もデータが残る
+
+1. `queryClient.clear()` が呼ばれているか確認
+2. ブラウザの Cookie を手動で削除してテスト
+3. `useSession` の `isPending` 状態を確認
