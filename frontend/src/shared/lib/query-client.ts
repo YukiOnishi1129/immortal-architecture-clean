@@ -4,8 +4,8 @@ const createQueryClient = () =>
   new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes
+        staleTime: 0, // RSCのhydrateデータを常に優先
+        gcTime: 5 * 60 * 1000, // 5分（デフォルト）
         retry: 1,
         refetchOnWindowFocus: false,
       },

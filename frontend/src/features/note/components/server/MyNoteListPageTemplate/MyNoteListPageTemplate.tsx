@@ -1,12 +1,9 @@
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from "@tanstack/react-query";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { listMyNoteQuery } from "@/external/handler/note/note.query.server";
 import { MyNoteList } from "@/features/note/components/client/MyNoteList";
 import { noteKeys } from "@/features/note/queries/keys";
 import type { NoteStatus } from "@/features/note/types";
+import { getQueryClient } from "@/shared/lib/query-client";
 
 type MyNoteListPageTemplateProps = {
   status?: NoteStatus;
@@ -17,7 +14,7 @@ type MyNoteListPageTemplateProps = {
 export async function MyNoteListPageTemplate(
   props: MyNoteListPageTemplateProps = {},
 ) {
-  const queryClient = new QueryClient();
+  const queryClient = getQueryClient();
 
   const filters = {
     status: props.status,

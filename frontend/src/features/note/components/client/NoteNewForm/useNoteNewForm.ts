@@ -80,7 +80,6 @@ export function useNoteNewForm({
 
         if (result?.id) {
           toast.success("ノートを作成しました");
-          router.refresh();
           // backToが指定されている場合はbackToに戻る、それ以外はマイノート一覧へ（新規作成は下書きのため）
           const redirectPath = backTo ?? "/my-notes";
           router.push(redirectPath);

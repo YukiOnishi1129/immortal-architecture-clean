@@ -77,7 +77,6 @@ export function useNoteEditForm(
           queryKey: noteKeys.lists(),
         });
 
-        router.refresh();
         const detailPath = backTo ? `/my-notes/${noteId}` : `/notes/${noteId}`;
         router.push(detailPath as Route);
       } catch (error) {

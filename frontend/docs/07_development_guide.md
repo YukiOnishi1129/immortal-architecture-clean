@@ -5,6 +5,7 @@
 ### 1. ルート設計
 
 適切なルートグループを選択：
+
 - `(guest)` - 未ログインユーザー向け
 - `(authenticated)` - ログイン必須
 - `(neutral)` - 認証不問
@@ -18,7 +19,7 @@ touch app/(authenticated)/notes/[noteId]/page.tsx
 touch app/(authenticated)/notes/[noteId]/loading.tsx
 ```
 
-### 3. Feature実装
+### 3. Feature 実装
 
 ```bash
 # Featureモジュール作成
@@ -55,20 +56,20 @@ mkdir -p features/note/types
 
 ```tsx
 // 1. React/Next
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 // 2. 外部ライブラリ
-import { useQuery } from '@tanstack/react-query'
-import { z } from 'zod'
+import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
 
 // 3. 内部モジュール（絶対パス）
-import { Button } from '@/shared/components/ui/button'
-import { useAuth } from '@/shared/hooks/use-auth'
+import { Button } from "@/shared/components/ui/button";
+import { useAuth } from "@/shared/hooks/use-auth";
 
 // 4. 相対パス
-import { NoteCard } from './NoteCard'
-import type { NoteListProps } from './types'
+import { NoteCard } from "./NoteCard";
+import type { NoteListProps } from "./types";
 ```
 
 ### コンポーネント構造
@@ -82,22 +83,27 @@ interface ComponentProps {
 // 2. コンポーネント定義
 export function Component({ prop1, prop2 }: ComponentProps) {
   // 3. フック
-  const router = useRouter()
-  const { data } = useQuery()
-  
+  const router = useRouter();
+  const { data } = useQuery();
+
   // 4. ローカル状態
-  const [state, setState] = useState()
-  
+  const [state, setState] = useState();
+
   // 5. 副作用
-  useEffect(() => {}, [])
-  
+  useEffect(() => {}, []);
+
   // 6. ハンドラー（必ずuseCallbackを使用）
-  const handleClick = useCallback(() => {
-    // 処理
-  }, [/* 依存配列 */])
-  
+  const handleClick = useCallback(
+    () => {
+      // 処理
+    },
+    [
+      /* 依存配列 */
+    ]
+  );
+
   // 7. レンダリング
-  return <div>...</div>
+  return <div>...</div>;
 }
 ```
 
@@ -107,41 +113,39 @@ export function Component({ prop1, prop2 }: ComponentProps) {
 
 ```ts
 // ❌ 避けるべき
-const data: any = {}
-const items: Array<Object> = []
+const data: any = {};
+const items: Array<Object> = [];
 
 // ✅ 推奨
-const data: UserData = {}
-const items: Item[] = []
+const data: UserData = {};
+const items: Item[] = [];
 ```
 
 ### ユーティリティ型の活用
 
 ```ts
 // Partial（一部のプロパティ）
-type UpdateNoteInput = Partial<Note>
+type UpdateNoteInput = Partial<Note>;
 
 // Omit（特定のプロパティを除外）
-type CreateNoteInput = Omit<Note, 'id' | 'createdAt'>
+type CreateNoteInput = Omit<Note, "id" | "createdAt">;
 
 // Pick（特定のプロパティのみ）
-type NotePreview = Pick<Note, 'id' | 'title' | 'status'>
+type NotePreview = Pick<Note, "id" | "title" | "status">;
 ```
 
 ## Next.js グローバル型定義
 
-Next.js 15以降では、`LayoutProps`と`PageProps`がグローバルに利用可能です。importする必要はありません。
+Next.js 15 以降では、`LayoutProps`と`PageProps`がグローバルに利用可能です。import する必要はありません。
 
 ### Layout Component
 
 ```tsx
 // app/(authenticated)/layout.tsx
-export default function AuthenticatedLayout(props: LayoutProps<'/'>) {
+export default function AuthenticatedLayout(props: LayoutProps<"/">) {
   return (
-    <AuthenticatedLayoutWrapper>
-      {props.children}
-    </AuthenticatedLayoutWrapper>
-  )
+    <AuthenticatedLayoutWrapper>{props.children}</AuthenticatedLayoutWrapper>
+  );
 }
 ```
 
@@ -149,26 +153,26 @@ export default function AuthenticatedLayout(props: LayoutProps<'/'>) {
 
 ```tsx
 // app/notes/[noteId]/page.tsx
-export default async function NotePage(props: PageProps<'/notes/[noteId]'>) {
-  const params = await props.params
-  const searchParams = await props.searchParams
-  
-  return <NoteDetailTemplate noteId={params.noteId} />
+export default async function NotePage(props: PageProps<"/notes/[noteId]">) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+
+  return <NoteDetailTemplate noteId={params.noteId} />;
 }
 
 // パラメータが不要な場合
-export default function ApprovalsPage(_props: PageProps<'/approvals'>) {
-  return <PendingApprovalsPageTemplate />
+export default function ApprovalsPage(_props: PageProps<"/approvals">) {
+  return <PendingApprovalsPageTemplate />;
 }
 ```
 
 ### 型の詳細
 
-- `LayoutProps<T>`: Tはルートパス。childrenとparamsを含む
-- `PageProps<T>`: Tはルートパス。paramsとsearchParamsを含む
-- 両方ともPromiseを返すため、awaitが必要
+- `LayoutProps<T>`: T はルートパス。children と params を含む
+- `PageProps<T>`: T はルートパス。params と searchParams を含む
+- 両方とも Promise を返すため、await が必要
 
-## Server ActionsとServer Functions
+## Server Actions と Server Functions
 
 ### 命名規則
 
@@ -194,7 +198,7 @@ export async function createNoteCommand(data: CreateNoteInput) { ... }
 
 #### Server Actions（`*.action.ts`）
 
-Server Actionsは、対応するServer Functionに`Action`サフィックスを付けます：
+Server Actions は、対応する Server Function に`Action`サフィックスを付けます：
 
 - **Query Actions**: `xxxQueryAction`
   - 例: `getNoteByIdQueryAction`, `listNotesQueryAction`
@@ -214,17 +218,17 @@ export async function createNoteCommandAction(data: CreateNoteInput) { ... }
 
 **RSC (React Server Component) から呼び出す場合は必ず`*Query`/`*Command`関数を使用すること。`*Action`関数は使用しない。**
 
-- **`*Action`**: Client ComponentやフォームアクションからのみOK
+- **`*Action`**: Client Component やフォームアクションからのみ OK
 - **`*Query`/`*Command`**: Server Component (page.tsx, layout.tsx, PageTemplate.tsx) からはこちらを使用
 
-| 呼び出し元 | 使用すべき関数 | 例 |
-|---|---|---|
-| Client Component | `*Action` | `useQuery`のqueryFn、フォームsubmit |
+| 呼び出し元             | 使用すべき関数      | 例                                     |
+| ---------------------- | ------------------- | -------------------------------------- |
+| Client Component       | `*Action`           | `useQuery`の queryFn、フォーム submit  |
 | Server Component (RSC) | `*Query`/`*Command` | page.tsx, layout.tsx, PageTemplate.tsx |
 
 ### 認証ヘルパー関数
 
-Server Componentで認証を扱う際は、以下のヘルパー関数を使用してください。
+Server Component で認証を扱う際は、以下のヘルパー関数を使用してください。
 
 #### requireAuthServer
 
@@ -244,7 +248,7 @@ export async function getNoteByIdQuery(id: string) {
 
 #### getAuthenticatedSessionServer
 
-認証チェックとセッション取得を1回で行います。未認証の場合は`/login`にリダイレクトします。セッション情報（`session.account.id`など）が必要な場合に使用します。
+認証チェックとセッション取得を 1 回で行います。未認証の場合は`/login`にリダイレクトします。セッション情報（`session.account.id`など）が必要な場合に使用します。
 
 ```ts
 // external/handler/note/note.command.server.ts
@@ -260,6 +264,7 @@ export async function createNoteCommand(request: unknown) {
 ```
 
 **使い分けのポイント:**
+
 - セッション情報が**不要** → `requireAuthServer()`
 - セッション情報が**必要** → `getAuthenticatedSessionServer()`
 
@@ -267,30 +272,31 @@ export async function createNoteCommand(request: unknown) {
 
 ```ts
 // external/handler/note/note.command.action.ts
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { createNoteCommand } from './note.command.server'
+import { revalidatePath } from "next/cache";
+import { createNoteCommand } from "./note.command.server";
 
 export async function createNoteCommandAction(input: CreateNoteInput) {
-  const result = await createNoteCommand(input)
+  const result = await createNoteCommand(input);
 
   if (result.success) {
-    revalidatePath('/notes')
+    revalidatePath("/notes");
   }
 
-  return result
+  return result;
 }
 ```
 
 **使用例（Client Component）:**
+
 ```tsx
 // features/note/hooks/useNoteQuery.ts
 export function useNoteListQuery(filters?: NoteFilters) {
   return useQuery({
     queryKey: noteKeys.list(filters),
     queryFn: () => listNotesQueryAction(filters), // ✅ Client ComponentからはAction
-  })
+  });
 }
 ```
 
@@ -298,7 +304,7 @@ export function useNoteListQuery(filters?: NoteFilters) {
 
 ```ts
 // external/handler/note/note.command.server.ts
-import 'server-only'
+import "server-only";
 
 export async function createNoteCommand(input: CreateNoteInput) {
   // ビジネスロジック
@@ -306,25 +312,27 @@ export async function createNoteCommand(input: CreateNoteInput) {
 ```
 
 **使用例（Server Component）:**
+
 ```tsx
 // app/(authenticated)/notes/page.tsx
 export default async function NotesPage() {
-  const notes = await listNotesQuery() // ✅ RSCからはQuery/Command
+  const notes = await listNotesQuery(); // ✅ RSCからはQuery/Command
 
-  return <NoteList notes={notes} />
+  return <NoteList notes={notes} />;
 }
 ```
 
 **使用例（layout.tsx - generateMetadata）:**
+
 ```tsx
 // app/(authenticated)/notes/[id]/layout.tsx
 export async function generateMetadata({ params }: LayoutProps) {
-  const id = (await params).id
-  const note = await getNoteByIdQuery(id) // ✅ RSCからはQuery/Command
+  const id = (await params).id;
+  const note = await getNoteByIdQuery(id); // ✅ RSCからはQuery/Command
 
   return {
-    title: note ? `${note.title} | Mini Notion` : 'ノート詳細 | Mini Notion'
-  }
+    title: note ? `${note.title} | Mini Notion` : "ノート詳細 | Mini Notion",
+  };
 }
 ```
 
@@ -334,47 +342,45 @@ export async function generateMetadata({ params }: LayoutProps) {
 
 ```ts
 // features/note/utils/validation.test.ts
-import { describe, it, expect } from 'vitest'
-import { validateNoteTitle } from './validation'
+import { describe, it, expect } from "vitest";
+import { validateNoteTitle } from "./validation";
 
-describe('validateNoteTitle', () => {
-  it('空文字を拒否する', () => {
-    expect(validateNoteTitle('')).toBe(false)
-  })
-  
-  it('100文字以内を許可する', () => {
-    expect(validateNoteTitle('a'.repeat(100))).toBe(true)
-  })
-})
+describe("validateNoteTitle", () => {
+  it("空文字を拒否する", () => {
+    expect(validateNoteTitle("")).toBe(false);
+  });
+
+  it("100文字以内を許可する", () => {
+    expect(validateNoteTitle("a".repeat(100))).toBe(true);
+  });
+});
 ```
 
 ### 統合テスト
 
 ```tsx
 // features/note/components/client/NoteList/NoteList.test.tsx
-import { render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { NoteList } from './NoteList'
+import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { NoteList } from "./NoteList";
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } }
-  })
-  
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
-}
+    defaultOptions: { queries: { retry: false } },
+  });
 
-describe('NoteList', () => {
-  it('ノート一覧を表示する', async () => {
-    render(<NoteList />, { wrapper: createWrapper() })
-    
-    expect(await screen.findByText('ノート1')).toBeInTheDocument()
-  })
-})
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
+
+describe("NoteList", () => {
+  it("ノート一覧を表示する", async () => {
+    render(<NoteList />, { wrapper: createWrapper() });
+
+    expect(await screen.findByText("ノート1")).toBeInTheDocument();
+  });
+});
 ```
 
 ## パフォーマンス最適化
@@ -384,18 +390,18 @@ describe('NoteList', () => {
 ```tsx
 // 重いコンポーネントの遅延読み込み
 const RichTextEditor = dynamic(
-  () => import('@/shared/components/RichTextEditor'),
-  { 
+  () => import("@/shared/components/RichTextEditor"),
+  {
     loading: () => <EditorSkeleton />,
-    ssr: false 
+    ssr: false,
   }
-)
+);
 ```
 
 ### 画像最適化
 
 ```tsx
-import Image from 'next/image'
+import Image from "next/image";
 
 <Image
   src="/avatar.png"
@@ -403,27 +409,27 @@ import Image from 'next/image'
   width={40}
   height={40}
   priority // Above the fold画像
-/>
+/>;
 ```
 
 ### バンドルサイズ削減
 
 ```ts
 // ❌ 全体インポート
-import _ from 'lodash'
+import _ from "lodash";
 
 // ✅ 個別インポート
-import debounce from 'lodash/debounce'
+import debounce from "lodash/debounce";
 ```
 
-## トランザクション管理（externalディレクトリ）
+## トランザクション管理（external ディレクトリ）
 
-> **注意**: このセクションは`external`ディレクトリ内のRepository/Service層の実装に関する内容です。
+> **注意**: このセクションは`external`ディレクトリ内の Repository/Service 層の実装に関する内容です。
 >
 > - **適用範囲**: `external`ディレクトリのみ
 > - **適用外**: `features`、`shared`、`app`ディレクトリには適用されません
 >
-> **Next.js自体をクリーンアーキテクチャにしているわけではありません**。Next.jsのApp Router、Server Components、Server Actionsといった機能は通常通り使用し、データアクセス層（Repository/Service）のみをクリーンアーキテクチャで設計しています。
+> **Next.js 自体をクリーンアーキテクチャにしているわけではありません**。Next.js の App Router、Server Components、Server Actions といった機能は通常通り使用し、データアクセス層（Repository/Service）のみをクリーンアーキテクチャで設計しています。
 
 ### アーキテクチャ概要
 
@@ -444,6 +450,7 @@ Client層 (db, Drizzle ORM)
 トランザクションは以下の条件で使用します：
 
 1. **複数テーブルへの書き込み操作**
+
    - 集約（Aggregate）内の複数エンティティを操作する場合
    - 例: Template（template + fields）、Note（note + sections）
 
@@ -453,7 +460,7 @@ Client層 (db, Drizzle ORM)
 
 ### トランザクション実装パターン
 
-#### Service層での使用
+#### Service 層での使用
 
 ```ts
 // external/service/note/note.service.ts
@@ -461,30 +468,36 @@ export class NoteService {
   constructor(
     private noteRepository: INoteRepository,
     private templateRepository: ITemplateRepository,
-    private transactionManager: ITransactionManager<DbClient>,
+    private transactionManager: ITransactionManager<DbClient>
   ) {}
 
   async createNote(ownerId: string, input: CreateNoteRequest): Promise<Note> {
     return this.transactionManager.execute(async (tx) => {
       // 1. Template取得（読み取り）
-      const template = await this.templateRepository.findById(input.templateId, tx);
+      const template = await this.templateRepository.findById(
+        input.templateId,
+        tx
+      );
       if (!template) {
         throw new Error("Template not found");
       }
 
       // 2. Note作成（書き込み: note + sections）
-      return this.noteRepository.create({
-        title: input.title,
-        templateId: input.templateId,
-        ownerId,
-        sections,
-      }, tx);
+      return this.noteRepository.create(
+        {
+          title: input.title,
+          templateId: input.templateId,
+          ownerId,
+          sections,
+        },
+        tx
+      );
     });
   }
 }
 ```
 
-#### Repository層での対応
+#### Repository 層での対応
 
 ```ts
 // external/repository/note.repository.ts
@@ -502,7 +515,7 @@ export class NoteRepository implements INoteRepository {
     // Create sections (同じトランザクション内)
     if (data.sections.length > 0) {
       await client.insert(sections).values(
-        data.sections.map(s => ({
+        data.sections.map((s) => ({
           noteId: noteId,
           fieldId: s.fieldId,
           content: s.content,
@@ -517,10 +530,10 @@ export class NoteRepository implements INoteRepository {
 
 ### COMMIT/ROLLBACK
 
-Drizzle ORMの`db.transaction()`が自動的に処理します：
+Drizzle ORM の`db.transaction()`が自動的に処理します：
 
-- **自動COMMIT**: コールバック関数が正常に完了したら自動的にCOMMIT
-- **自動ROLLBACK**: コールバック関数内でエラーがthrowされたら自動的にROLLBACK
+- **自動 COMMIT**: コールバック関数が正常に完了したら自動的に COMMIT
+- **自動 ROLLBACK**: コールバック関数内でエラーが throw されたら自動的に ROLLBACK
 
 ```ts
 // TransactionRepository実装
@@ -540,6 +553,7 @@ async execute<T>(callback: (tx: DbClient) => Promise<T>): Promise<T> {
 以下の場合はトランザクションを使用しません：
 
 1. **読み取り専用のクエリ**
+
    ```ts
    async getNoteById(id: string): Promise<Note | null> {
      return this.noteRepository.findById(id); // トランザクション不要
@@ -547,6 +561,7 @@ async execute<T>(callback: (tx: DbClient) => Promise<T>): Promise<T> {
    ```
 
 2. **単一テーブルへの単純な操作**
+
    ```ts
    async getAccountForTemplate(ownerId: string) {
      return this.templateRepository.getAccountForTemplate(ownerId); // 読み取りのみ
@@ -554,21 +569,21 @@ async execute<T>(callback: (tx: DbClient) => Promise<T>): Promise<T> {
    ```
 
 3. **集約でない単一エンティティ**
-   - Accountなど、他のエンティティと関連を持たない場合
+   - Account など、他のエンティティと関連を持たない場合
 
 ### 実装例まとめ
 
-| ユースケース | トランザクション使用 | 理由 |
-|---|---|---|
-| Template作成 | ✅ 必要 | template + fields の作成 |
-| Template更新 | ✅ 必要 | 存在チェック + template + fields の更新 |
-| Template削除 | ✅ 必要 | 存在チェック + template + fields の削除 |
-| Note作成 | ✅ 必要 | template取得 + note + sections の作成 |
-| Note更新 | ✅ 必要 | 存在チェック + note + sections の更新 |
-| Note公開/非公開 | ✅ 必要 | 存在チェック + note + sections の更新 |
-| Note削除 | ✅ 必要 | 存在チェック + note + sections の削除 |
-| Note一覧取得 | ❌ 不要 | 読み取りのみ |
-| Account取得 | ❌ 不要 | 単一エンティティの読み取り |
+| ユースケース     | トランザクション使用 | 理由                                    |
+| ---------------- | -------------------- | --------------------------------------- |
+| Template 作成    | ✅ 必要              | template + fields の作成                |
+| Template 更新    | ✅ 必要              | 存在チェック + template + fields の更新 |
+| Template 削除    | ✅ 必要              | 存在チェック + template + fields の削除 |
+| Note 作成        | ✅ 必要              | template 取得 + note + sections の作成  |
+| Note 更新        | ✅ 必要              | 存在チェック + note + sections の更新   |
+| Note 公開/非公開 | ✅ 必要              | 存在チェック + note + sections の更新   |
+| Note 削除        | ✅ 必要              | 存在チェック + note + sections の削除   |
+| Note 一覧取得    | ❌ 不要              | 読み取りのみ                            |
+| Account 取得     | ❌ 不要              | 単一エンティティの読み取り              |
 
 ## デバッグテクニック
 
@@ -576,30 +591,30 @@ async execute<T>(callback: (tx: DbClient) => Promise<T>): Promise<T> {
 
 開発環境で自動的に有効化されます。
 
-### Server Componentsのデバッグ
+### Server Components のデバッグ
 
 ```tsx
 // コンソール出力はサーバー側に表示
 export default async function Page() {
-  console.log('This logs on the server')
+  console.log("This logs on the server");
 
-  const data = await fetchData()
-  console.log('Fetched data:', data)
+  const data = await fetchData();
+  console.log("Fetched data:", data);
 
-  return <div>...</div>
+  return <div>...</div>;
 }
 ```
 
-### Client Componentsのデバッグ
+### Client Components のデバッグ
 
 ```tsx
-'use client'
+"use client";
 
 export function Component() {
   // ブラウザコンソールに表示
-  console.log('This logs in the browser')
+  console.log("This logs in the browser");
 
   // React Developer Tools で確認可能
-  return <div>...</div>
+  return <div>...</div>;
 }
 ```

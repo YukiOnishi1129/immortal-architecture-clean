@@ -1,13 +1,10 @@
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from "@tanstack/react-query";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { redirect } from "next/navigation";
 import { getNoteByIdQuery } from "@/external/handler/note/note.query.server";
 import { getSessionServer } from "@/features/auth/servers/auth.server";
 import { NoteEditForm } from "@/features/note/components/client/NoteEditForm";
 import { noteKeys } from "@/features/note/queries/keys";
+import { getQueryClient } from "@/shared/lib/query-client";
 
 type MyNoteEditPageTemplateProps = {
   noteId: string;
@@ -16,7 +13,7 @@ type MyNoteEditPageTemplateProps = {
 export async function MyNoteEditPageTemplate({
   noteId,
 }: MyNoteEditPageTemplateProps) {
-  const queryClient = new QueryClient();
+  const queryClient = getQueryClient();
 
   const [session, note] = await Promise.all([
     getSessionServer(),

@@ -33,7 +33,6 @@ export function useTemplateDetail(templateId: string) {
       try {
         await deleteTemplateCommandAction(templateId);
         toast.success("テンプレートを削除しました");
-        router.refresh();
         router.push("/templates");
       } catch (error) {
         console.error("テンプレートの削除に失敗しました:", error);
