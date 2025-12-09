@@ -110,10 +110,10 @@ GetNoteByIdResponse = NoteResponse | null;  // 見つからない場合はnull
 CreateNoteRequest {
   title: string
   templateId: string
-  sections?: [{
+  sections: [{
     fieldId: string
     content: string
-  }>;
+  }]
 }
 ```
 
@@ -126,7 +126,8 @@ CreateNoteResponse = NoteResponse;
 - 認証必須
 - 新規作成時のステータスは"Draft"
 - 指定されたテンプレートが存在する必要がある
-- sectionsが未指定の場合、テンプレートのフィールドから空のセクションを自動生成
+- sectionsは必須（テンプレートの全フィールドに対応するセクションが必要）
+- isRequiredがtrueのフィールドはcontentが空だとエラー
 
 ---
 

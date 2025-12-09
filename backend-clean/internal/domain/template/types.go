@@ -18,7 +18,6 @@ type Owner struct {
 // WithUsage is a template with usage metadata.
 type WithUsage struct {
 	Template Template
-	Fields   []Field
 	IsUsed   bool
 	Owner    Owner
 }

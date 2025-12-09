@@ -1,3 +1,4 @@
+// Package service contains domain services for cross-aggregate operations.
 package service
 
 import (

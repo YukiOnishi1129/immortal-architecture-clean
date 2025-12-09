@@ -15,7 +15,6 @@ func (s NoteStatus) Validate() error {
 }
 
 // CanChangeStatus validates status transition.
-// CanChangeStatus validates status transition.
 func CanChangeStatus(from, to NoteStatus) error {
 	if from == StatusDraft && to == StatusPublish {
 		return nil

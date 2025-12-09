@@ -3,7 +3,6 @@ package note
 import "time"
 
 // NoteStatus represents publication status.
-// NoteStatus represents publication status.
 //
 //nolint:revive
 type NoteStatus string

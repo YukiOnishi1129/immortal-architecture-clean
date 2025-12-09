@@ -115,6 +115,7 @@ func TestNoteInteractor_Get(t *testing.T) {
 
 func TestNoteInteractor_Create(t *testing.T) {
 	templateFields := []template.Field{{ID: "f1", Label: "Title", Order: 1, IsRequired: false}}
+	validSections := []port.SectionInput{{FieldID: "f1", Content: "content"}}
 	tests := []struct {
 		name        string
 		input       port.NoteCreateInput
@@ -126,7 +127,20 @@ func TestNoteInteractor_Create(t *testing.T) {
 		expectTxRun bool
 	}{
 		{
-			name: "[Success] create with auto sections",
+			name: "[Success] create with sections",
+			input: port.NoteCreateInput{
+				Title:      "Hello",
+				TemplateID: "tpl-1",
+				OwnerID:    "owner-1",
+				Sections:   validSections,
+			},
+			tpl: &template.WithUsage{
+				Template: template.Template{ID: "tpl-1", Name: "tpl", OwnerID: "owner-1", Fields: templateFields},
+			},
+			expectTxRun: true,
+		},
+		{
+			name: "[Fail] sections missing",
 			input: port.NoteCreateInput{
 				Title:      "Hello",
 				TemplateID: "tpl-1",
@@ -136,7 +150,7 @@ func TestNoteInteractor_Create(t *testing.T) {
 			tpl: &template.WithUsage{
 				Template: template.Template{ID: "tpl-1", Name: "tpl", OwnerID: "owner-1", Fields: templateFields},
 			},
-			expectTxRun: true,
+			wantError: domainerr.ErrSectionsMissing,
 		},
 		{
 			name: "[Fail] template get error",
@@ -144,6 +158,7 @@ func TestNoteInteractor_Create(t *testing.T) {
 				Title:      "Hello",
 				TemplateID: "tpl-1",
 				OwnerID:    "owner-1",
+				Sections:   validSections,
 			},
 			getTplErr: errors.New("get tpl err"),
 			wantError: errors.New("get tpl err"),
@@ -154,6 +169,7 @@ func TestNoteInteractor_Create(t *testing.T) {
 				Title:      "",
 				TemplateID: "tpl-1",
 				OwnerID:    "owner-1",
+				Sections:   validSections,
 			},
 			tpl:       &template.WithUsage{Template: template.Template{ID: "tpl-1", Name: "tpl", OwnerID: "owner-1", Fields: templateFields}},
 			wantError: domainerr.ErrTitleRequired,
@@ -164,6 +180,7 @@ func TestNoteInteractor_Create(t *testing.T) {
 				Title:      "Hello",
 				TemplateID: "tpl-1",
 				OwnerID:    "owner-1",
+				Sections:   validSections,
 			},
 			tpl:         &template.WithUsage{Template: template.Template{ID: "tpl-1", Name: "tpl", OwnerID: "owner-1", Fields: templateFields}},
 			createErr:   errors.New("create err"),
@@ -176,6 +193,7 @@ func TestNoteInteractor_Create(t *testing.T) {
 				Title:      "Hello",
 				TemplateID: "tpl-1",
 				OwnerID:    "owner-1",
+				Sections:   validSections,
 			},
 			tpl:         &template.WithUsage{Template: template.Template{ID: "tpl-1", Name: "tpl", OwnerID: "owner-1", Fields: templateFields}},
 			replaceErr:  errors.New("replace err"),
