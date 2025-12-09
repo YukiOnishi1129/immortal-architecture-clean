@@ -40,7 +40,6 @@ func TestTemplateInteractor_Create(t *testing.T) {
 					OwnerID: "owner-1",
 					Fields:  []template.Field{{ID: "f1", Label: "Title", Order: 1, IsRequired: true}},
 				},
-				Fields: []template.Field{{ID: "f1", Label: "Title", Order: 1, IsRequired: true}},
 			},
 		},
 		{

@@ -84,7 +84,7 @@ func (u *TemplateInteractor) Update(ctx context.Context, input port.TemplateUpda
 	if err != nil {
 		return err
 	}
-	if err := current.Template.EnsureOwner(input.OwnerID); err != nil {
+	if err := template.ValidateTemplateOwnership(current.Template.OwnerID, input.OwnerID); err != nil {
 		return err
 	}
 	if input.Fields != nil {
@@ -131,11 +131,11 @@ func (u *TemplateInteractor) Delete(ctx context.Context, id, ownerID string) err
 	if err != nil {
 		return err
 	}
-	if err := tpl.Template.EnsureOwner(ownerID); err != nil {
+	if err := template.ValidateTemplateOwnership(tpl.Template.OwnerID, ownerID); err != nil {
 		return err
 	}
-	if tpl.IsUsed {
-		return domainerr.ErrTemplateInUse
+	if err := template.CanDeleteTemplate(tpl.IsUsed); err != nil {
+		return err
 	}
 	if err := u.repo.Delete(ctx, id); err != nil {
 		return err

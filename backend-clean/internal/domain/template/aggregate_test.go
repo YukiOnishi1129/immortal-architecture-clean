@@ -47,36 +47,3 @@ func TestTemplate_ReplaceFields(t *testing.T) {
 	}
 }
 
-func TestTemplate_EnsureOwner(t *testing.T) {
-	tests := []struct {
-		name      string
-		ownerID   string
-		wantError error
-	}{
-		{
-			name:    "[Success] set owner",
-			ownerID: "owner-1",
-		},
-		{
-			name:      "[Fail] empty owner",
-			ownerID:   "",
-			wantError: domainerr.ErrTemplateOwnerRequired,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tpl := Template{}
-			err := tpl.EnsureOwner(tt.ownerID)
-			if tt.wantError == nil && err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if tt.wantError != nil && !errors.Is(err, tt.wantError) {
-				t.Fatalf("want %v, got %v", tt.wantError, err)
-			}
-			if err == nil && tpl.OwnerID != tt.ownerID {
-				t.Fatalf("owner not set: %s", tpl.OwnerID)
-			}
-		})
-	}
-}

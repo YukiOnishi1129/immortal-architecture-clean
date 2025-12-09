@@ -1,6 +1,10 @@
 package template
 
-import domainerr "immortal-architecture-clean/backend/internal/domain/errors"
+import (
+	"strings"
+
+	domainerr "immortal-architecture-clean/backend/internal/domain/errors"
+)
 
 // NormalizeAndValidate sets missing order and validates fields.
 func NormalizeAndValidate(fields []Field) ([]Field, error) {
@@ -54,6 +58,17 @@ func ValidateTemplate(t Template) error {
 func CanDeleteTemplate(isUsed bool) error {
 	if isUsed {
 		return domainerr.ErrTemplateInUse
+	}
+	return nil
+}
+
+// ValidateTemplateOwnership ensures only owner can mutate a template.
+func ValidateTemplateOwnership(templateOwnerID, actorID string) error {
+	if strings.TrimSpace(templateOwnerID) == "" || strings.TrimSpace(actorID) == "" {
+		return domainerr.ErrTemplateOwnerRequired
+	}
+	if templateOwnerID != actorID {
+		return domainerr.ErrUnauthorized
 	}
 	return nil
 }

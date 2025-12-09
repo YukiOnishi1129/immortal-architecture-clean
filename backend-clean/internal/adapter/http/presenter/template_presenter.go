@@ -10,7 +10,6 @@ import (
 )
 
 // TemplatePresenter converts template domain models to OpenAPI responses.
-// TemplatePresenter converts template domain models to OpenAPI responses.
 type TemplatePresenter struct {
 	template *openapi.ModelsTemplateResponse
 	list     []openapi.ModelsTemplateResponse
@@ -63,8 +62,8 @@ func (p *TemplatePresenter) DeleteResponse() openapi.ModelsSuccessResponse {
 }
 
 func toTemplateResponse(t template.WithUsage) openapi.ModelsTemplateResponse {
-	fields := make([]openapi.ModelsField, 0, len(t.Fields))
-	for _, f := range t.Fields {
+	fields := make([]openapi.ModelsField, 0, len(t.Template.Fields))
+	for _, f := range t.Template.Fields {
 		fields = append(fields, openapi.ModelsField{
 			Id:         f.ID,
 			Label:      f.Label,

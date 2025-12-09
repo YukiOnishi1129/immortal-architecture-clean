@@ -52,28 +52,41 @@ func (u *NoteInteractor) Get(ctx context.Context, id string) error {
 
 // Create creates a note.
 func (u *NoteInteractor) Create(ctx context.Context, input port.NoteCreateInput) error {
+	if input.OwnerID == "" {
+		return domainerr.ErrOwnerRequired
+	}
+
 	tpl, err := u.templates.Get(ctx, input.TemplateID)
 	if err != nil {
 		return err
 	}
 
-	sections := buildSections("", tpl.Template.Fields, input.Sections)
+	sections, err := buildSections("", input.Sections)
+	if err != nil {
+		return err
+	}
 	if err := note.ValidateNoteForCreate(input.Title, tpl.Template, sections); err != nil {
 		return err
 	}
 
 	var noteID string
 	err = u.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
-		built, err := service.BuildNote(input.Title, tpl.Template, input.OwnerID, sections)
-		if err != nil {
-			return err
+		newNote := note.Note{
+			Title:      input.Title,
+			TemplateID: tpl.Template.ID,
+			OwnerID:    input.OwnerID,
+			Status:     note.StatusDraft,
+			Sections:   sections,
 		}
-		nn, err := u.notes.Create(txCtx, built)
+		nn, err := u.notes.Create(txCtx, newNote)
 		if err != nil {
 			return err
 		}
 		noteID = nn.ID
-		sectionsWithID := buildSections(noteID, tpl.Template.Fields, input.Sections)
+		sectionsWithID, err := buildSections(noteID, input.Sections)
+		if err != nil {
+			return err
+		}
 		if err := note.ValidateSections(tpl.Template.Fields, sectionsWithID); err != nil {
 			return err
 		}
@@ -189,13 +202,9 @@ func (u *NoteInteractor) Delete(ctx context.Context, id, ownerID string) error {
 	return u.output.PresentNoteDeleted(ctx)
 }
 
-func buildSections(noteID string, templateFields []template.Field, inputs []port.SectionInput) []note.Section {
+func buildSections(noteID string, inputs []port.SectionInput) ([]note.Section, error) {
 	if len(inputs) == 0 {
-		sections := service.BuildSectionsFromTemplate(templateFields)
-		for i := range sections {
-			sections[i].NoteID = noteID
-		}
-		return sections
+		return nil, domainerr.ErrSectionsMissing
 	}
 
 	sections := make([]note.Section, 0, len(inputs))
@@ -206,7 +215,7 @@ func buildSections(noteID string, templateFields []template.Field, inputs []port
 			Content: s.Content,
 		})
 	}
-	return sections
+	return sections, nil
 }
 
 // buildSectionsForUpdate maps update inputs to sections using existing sections' field IDs.

@@ -77,7 +77,6 @@ func (r *TemplateRepository) List(ctx context.Context, filters template.Filters)
 				UpdatedAt: timestamptzToTime(row.UpdatedAt),
 				Fields:    fields,
 			},
-			Fields: fields,
 			IsUsed: row.IsUsed,
 			Owner:  owner,
 		})
@@ -111,7 +110,6 @@ func (r *TemplateRepository) Get(ctx context.Context, id string) (*template.With
 			UpdatedAt: timestamptzToTime(row.UpdatedAt),
 			Fields:    fields,
 		},
-		Fields: fields,
 		IsUsed: row.IsUsed,
 		Owner:  owner,
 	}, nil

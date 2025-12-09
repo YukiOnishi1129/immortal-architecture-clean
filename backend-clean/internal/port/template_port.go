@@ -8,7 +8,6 @@ import (
 )
 
 // TemplateInputPort defines template use case inputs.
-// TemplateInputPort defines template use case inputs.
 type TemplateInputPort interface {
 	List(ctx context.Context, filters template.Filters) error
 	Get(ctx context.Context, id string) error
@@ -17,7 +16,6 @@ type TemplateInputPort interface {
 	Delete(ctx context.Context, id, ownerID string) error
 }
 
-// TemplateOutputPort defines presenter for templates.
 // TemplateOutputPort defines template presenters.
 type TemplateOutputPort interface {
 	PresentTemplateList(ctx context.Context, templates []template.WithUsage) error
@@ -25,7 +23,6 @@ type TemplateOutputPort interface {
 	PresentTemplateDeleted(ctx context.Context) error
 }
 
-// TemplateRepository abstracts template persistence.
 // TemplateRepository abstracts template persistence.
 type TemplateRepository interface {
 	List(ctx context.Context, filters template.Filters) ([]template.WithUsage, error)
@@ -37,14 +34,12 @@ type TemplateRepository interface {
 }
 
 // TemplateCreateInput is input for creating templates.
-// TemplateCreateInput is input for creating templates.
 type TemplateCreateInput struct {
 	Name    string
 	OwnerID string
 	Fields  []template.Field
 }
 
-// TemplateUpdateInput is input for updating templates.
 // TemplateUpdateInput is input for updating templates.
 type TemplateUpdateInput struct {
 	ID      string

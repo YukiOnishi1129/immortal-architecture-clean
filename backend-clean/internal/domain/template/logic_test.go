@@ -144,3 +144,53 @@ func TestCanDeleteTemplate(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateTemplateOwnership(t *testing.T) {
+	tests := []struct {
+		name      string
+		ownerID   string
+		actorID   string
+		wantError error
+	}{
+		{
+			name:    "[Success] owner matches",
+			ownerID: "owner-1",
+			actorID: "owner-1",
+		},
+		{
+			name:      "[Fail] owner mismatch",
+			ownerID:   "owner-1",
+			actorID:   "other",
+			wantError: domainerr.ErrUnauthorized,
+		},
+		{
+			name:      "[Fail] empty owner",
+			ownerID:   "",
+			actorID:   "actor-1",
+			wantError: domainerr.ErrTemplateOwnerRequired,
+		},
+		{
+			name:      "[Fail] empty actor",
+			ownerID:   "owner-1",
+			actorID:   "",
+			wantError: domainerr.ErrTemplateOwnerRequired,
+		},
+		{
+			name:      "[Fail] whitespace owner",
+			ownerID:   "  ",
+			actorID:   "actor-1",
+			wantError: domainerr.ErrTemplateOwnerRequired,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateTemplateOwnership(tt.ownerID, tt.actorID)
+			if tt.wantError == nil && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if tt.wantError != nil && !errors.Is(err, tt.wantError) {
+				t.Fatalf("want %v, got %v", tt.wantError, err)
+			}
+		})
+	}
+}
