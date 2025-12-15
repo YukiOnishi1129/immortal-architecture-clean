@@ -31,7 +31,7 @@ export function useNoteDetail(
   const { data: note, isLoading } = useNoteDetailQuery(noteId);
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteNoteCommandAction(noteId),
+    mutationFn: () => deleteNoteCommandAction({ id: noteId }),
     onSuccess: () => {
       toast.success("ノートを削除しました");
       queryClient.invalidateQueries({ queryKey: noteKeys.lists() });

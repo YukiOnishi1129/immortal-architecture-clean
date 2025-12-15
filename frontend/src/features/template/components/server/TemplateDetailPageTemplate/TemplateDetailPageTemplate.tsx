@@ -14,7 +14,7 @@ export async function TemplateDetailPageTemplate({
   templateId,
 }: TemplateDetailPageTemplateProps) {
   const [template, session] = await Promise.all([
-    getTemplateByIdQuery(templateId),
+    getTemplateByIdQuery({ id: templateId }),
     getSessionServer(),
   ]);
 

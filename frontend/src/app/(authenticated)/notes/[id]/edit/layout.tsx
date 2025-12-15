@@ -5,7 +5,7 @@ export async function generateMetadata({
   params,
 }: LayoutProps<"/notes/[id]/edit">): Promise<Metadata> {
   const { id } = await params;
-  const note = await getNoteByIdQuery(id);
+  const note = await getNoteByIdQuery({ id });
 
   return {
     title: note

@@ -1,5 +1,25 @@
 import { z } from "zod";
 
+// Query request schemas
+export const GetNoteByIdRequestSchema = z.object({
+  id: z.uuid(),
+});
+
+export const ListNoteRequestSchema = z.object({
+  status: z.enum(["Draft", "Publish"]).optional(),
+  templateId: z.uuid().optional(),
+  q: z.string().optional(),
+  page: z.number().int().positive().optional(),
+  ownerId: z.uuid().optional(),
+});
+
+export const ListMyNoteRequestSchema = z.object({
+  status: z.enum(["Draft", "Publish"]).optional(),
+  templateId: z.uuid().optional(),
+  q: z.string().optional(),
+  page: z.number().int().positive().optional(),
+});
+
 // Section schemas
 export const SectionResponseSchema = z.object({
   id: z.uuid(),
@@ -52,6 +72,21 @@ export const UpdateNoteRequestSchema = z.object({
   ),
 });
 
+export const UpdateNoteByIdRequestSchema = z.object({
+  id: z.uuid(),
+  title: z.string().min(1).max(100),
+  sections: z.array(
+    z.object({
+      id: z.uuid(),
+      content: z.string(),
+    }),
+  ),
+});
+
+export const DeleteNoteRequestSchema = z.object({
+  id: z.uuid(),
+});
+
 export const PublishNoteRequestSchema = z.object({
   noteId: z.uuid(),
 });
@@ -61,11 +96,16 @@ export const UnpublishNoteRequestSchema = z.object({
 });
 
 // Type exports
+export type GetNoteByIdRequest = z.infer<typeof GetNoteByIdRequestSchema>;
+export type ListNoteRequest = z.infer<typeof ListNoteRequestSchema>;
+export type ListMyNoteRequest = z.infer<typeof ListMyNoteRequestSchema>;
 export type Owner = z.infer<typeof OwnerSchema>;
 export type SectionResponse = z.infer<typeof SectionResponseSchema>;
 export type SectionInput = z.infer<typeof SectionInputSchema>;
 export type NoteResponse = z.infer<typeof NoteResponseSchema>;
 export type CreateNoteRequest = z.infer<typeof CreateNoteRequestSchema>;
 export type UpdateNoteRequest = z.infer<typeof UpdateNoteRequestSchema>;
+export type UpdateNoteByIdRequest = z.infer<typeof UpdateNoteByIdRequestSchema>;
+export type DeleteNoteRequest = z.infer<typeof DeleteNoteRequestSchema>;
 export type PublishNoteRequest = z.infer<typeof PublishNoteRequestSchema>;
 export type UnpublishNoteRequest = z.infer<typeof UnpublishNoteRequestSchema>;

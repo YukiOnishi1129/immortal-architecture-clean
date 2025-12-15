@@ -31,7 +31,7 @@ export function useTemplateDetail(templateId: string) {
   const handleDeleteConfirm = () => {
     startTransition(async () => {
       try {
-        await deleteTemplateCommandAction(templateId);
+        await deleteTemplateCommandAction({ id: templateId });
         toast.success("テンプレートを削除しました");
         router.push("/templates");
       } catch (error) {

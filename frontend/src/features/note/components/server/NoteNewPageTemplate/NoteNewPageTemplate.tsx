@@ -17,7 +17,7 @@ export async function NoteNewPageTemplate({
   if (initialTemplateId) {
     await queryClient.prefetchQuery({
       queryKey: templateKeys.detail(initialTemplateId),
-      queryFn: () => getTemplateByIdQuery(initialTemplateId),
+      queryFn: () => getTemplateByIdQuery({ id: initialTemplateId }),
     });
   }
 

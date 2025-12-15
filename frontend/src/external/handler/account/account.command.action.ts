@@ -3,7 +3,7 @@
 import type {
   CreateOrGetAccountRequest,
   CreateOrGetAccountResponse,
-  UpdateAccountRequest,
+  UpdateAccountByIdRequest,
   UpdateAccountResponse,
 } from "../../dto/account.dto";
 import {
@@ -18,8 +18,7 @@ export async function createOrGetAccountCommandAction(
 }
 
 export async function updateAccountCommandAction(
-  id: string,
-  request: UpdateAccountRequest,
+  request: UpdateAccountByIdRequest,
 ): Promise<UpdateAccountResponse> {
-  return updateAccountCommand(id, request);
+  return updateAccountCommand(request);
 }

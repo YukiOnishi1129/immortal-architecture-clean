@@ -1,5 +1,6 @@
 "use server";
 
+import type { GetAccountByIdRequest } from "../../dto/account.dto";
 import {
   getAccountByIdQuery,
   getCurrentAccountQuery,
@@ -9,6 +10,8 @@ export async function getCurrentAccountQueryAction() {
   return getCurrentAccountQuery();
 }
 
-export async function getAccountByIdQueryAction(id: string) {
-  return getAccountByIdQuery(id);
+export async function getAccountByIdQueryAction(
+  request: GetAccountByIdRequest,
+) {
+  return getAccountByIdQuery(request);
 }

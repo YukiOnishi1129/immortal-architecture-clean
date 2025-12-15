@@ -15,7 +15,7 @@ export async function MyNoteDetailPageTemplate({
 }: MyNoteDetailPageTemplateProps) {
   const [session, note] = await Promise.all([
     getSessionServer(),
-    getNoteByIdQuery(noteId),
+    getNoteByIdQuery({ id: noteId }),
   ]);
 
   if (!note) {
