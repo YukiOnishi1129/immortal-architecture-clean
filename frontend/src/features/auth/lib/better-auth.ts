@@ -1,7 +1,7 @@
 import "server-only";
 import { betterAuth } from "better-auth";
 import { customSession } from "better-auth/plugins";
-import { unstable_cache } from "next/cache";
+import { unstable_cache, updateTag } from "next/cache";
 import { createOrGetAccountCommand } from "@/external/handler/account/account.command.server";
 import { getAccountByEmailQuery } from "@/external/handler/account/account.query.server";
 import type { Account } from "@/features/account/types";
@@ -49,6 +49,8 @@ export const auth = betterAuth({
             providerAccountId: ctx.user.id,
             thumbnail: ctx.user.image || undefined,
           });
+          // アカウント作成/更新後にキャッシュを無効化して、customSessionで最新データを取得
+          updateTag("account");
         } catch (error) {
           console.error(
             "[better-auth] Failed to save account in onSuccess:",
