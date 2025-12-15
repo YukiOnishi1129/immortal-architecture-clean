@@ -1,6 +1,12 @@
 import "server-only";
 import { getSessionServer } from "@/features/auth/servers/auth.server";
-import { AccountResponseSchema } from "../../dto/account.dto";
+import {
+  AccountResponseSchema,
+  type GetAccountByEmailRequest,
+  GetAccountByEmailRequestSchema,
+  type GetAccountByIdRequest,
+  GetAccountByIdRequestSchema,
+} from "../../dto/account.dto";
 import { accountService } from "../../service/account/account.service";
 
 export async function getCurrentAccountQuery() {
@@ -17,8 +23,9 @@ export async function getCurrentAccountQuery() {
   return AccountResponseSchema.parse(account);
 }
 
-export async function getAccountByIdQuery(id: string) {
-  const account = await accountService.getAccountById(id);
+export async function getAccountByIdQuery(request: GetAccountByIdRequest) {
+  const validated = GetAccountByIdRequestSchema.parse(request);
+  const account = await accountService.getAccountById(validated.id);
 
   if (!account) {
     return null;
@@ -27,8 +34,13 @@ export async function getAccountByIdQuery(id: string) {
   return AccountResponseSchema.parse(account);
 }
 
-export async function getAccountByEmailQuery(email: string) {
-  const account = await accountService.getCurrentAccountByEmail(email);
+export async function getAccountByEmailQuery(
+  request: GetAccountByEmailRequest,
+) {
+  const validated = GetAccountByEmailRequestSchema.parse(request);
+  const account = await accountService.getCurrentAccountByEmail(
+    validated.email,
+  );
 
   if (!account) {
     return null;

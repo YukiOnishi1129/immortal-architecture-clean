@@ -52,7 +52,8 @@ export function useTemplateEditForm(templateId: string) {
           order: index + 1,
         }));
 
-        await updateTemplateCommandAction(templateId, {
+        await updateTemplateCommandAction({
+          id: templateId,
           name: data.name,
           fields,
         });

@@ -62,7 +62,8 @@ export function useNoteEditForm(
           content: section.content,
         }));
 
-        const updatedNote = await updateNoteCommandAction(noteId, {
+        const updatedNote = await updateNoteCommandAction({
+          id: noteId,
           title: data.title,
           sections,
         });

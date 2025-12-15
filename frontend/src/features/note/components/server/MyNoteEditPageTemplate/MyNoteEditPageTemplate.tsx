@@ -17,7 +17,7 @@ export async function MyNoteEditPageTemplate({
 
   const [session, note] = await Promise.all([
     getSessionServer(),
-    getNoteByIdQuery(noteId),
+    getNoteByIdQuery({ id: noteId }),
   ]);
 
   if (!note) {

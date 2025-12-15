@@ -10,7 +10,7 @@ export async function generateMetadata({
   params,
 }: LayoutProps): Promise<Metadata> {
   const id = (await params).id;
-  const template = await getTemplateByIdQuery(id);
+  const template = await getTemplateByIdQuery({ id });
 
   // If template is used, don't generate edit metadata
   if (template?.isUsed) {

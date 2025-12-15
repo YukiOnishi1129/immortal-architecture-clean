@@ -12,7 +12,7 @@ interface TemplateEditPageTemplateProps {
 export async function TemplateEditPageTemplate({
   templateId,
 }: TemplateEditPageTemplateProps) {
-  const template = await getTemplateByIdQuery(templateId);
+  const template = await getTemplateByIdQuery({ id: templateId });
 
   if (!template) {
     notFound();

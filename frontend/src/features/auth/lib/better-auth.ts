@@ -11,7 +11,7 @@ import type { Account } from "@/features/account/types";
 // NOTE: unstable_cacheは関数の引数も自動的にキャッシュキーに含まれる
 const getCachedAccount = unstable_cache(
   async (email: string): Promise<Account | null> => {
-    return await getAccountByEmailQuery(email);
+    return await getAccountByEmailQuery({ email });
   },
   ["account-by-email"], // 引数emailは自動的にキャッシュキーに含まれる
   {

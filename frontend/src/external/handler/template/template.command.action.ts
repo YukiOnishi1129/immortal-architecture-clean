@@ -2,7 +2,8 @@
 
 import type {
   CreateTemplateRequest,
-  UpdateTemplateRequest,
+  DeleteTemplateRequest,
+  UpdateTemplateByIdRequest,
 } from "@/external/dto/template.dto";
 import {
   createTemplateCommand,
@@ -17,12 +18,13 @@ export async function createTemplateCommandAction(
 }
 
 export async function updateTemplateCommandAction(
-  id: string,
-  request: UpdateTemplateRequest,
+  request: UpdateTemplateByIdRequest,
 ) {
-  return updateTemplateCommand(id, request);
+  return updateTemplateCommand(request);
 }
 
-export async function deleteTemplateCommandAction(id: string) {
-  return deleteTemplateCommand(id);
+export async function deleteTemplateCommandAction(
+  request: DeleteTemplateRequest,
+) {
+  return deleteTemplateCommand(request);
 }

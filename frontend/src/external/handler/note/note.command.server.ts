@@ -1,83 +1,58 @@
 import "server-only";
 
-import { getAuthenticatedSessionServer } from "@/features/auth/servers/redirect.server";
+import { withAuth } from "@/features/auth/servers/auth.guard";
 import {
+  type CreateNoteRequest,
   CreateNoteRequestSchema,
+  type DeleteNoteRequest,
+  DeleteNoteRequestSchema,
   NoteResponseSchema,
+  type PublishNoteRequest,
   PublishNoteRequestSchema,
+  type UnpublishNoteRequest,
   UnpublishNoteRequestSchema,
-  UpdateNoteRequestSchema,
+  type UpdateNoteByIdRequest,
+  UpdateNoteByIdRequestSchema,
 } from "../../dto/note.dto";
 import { noteService } from "../../service/note/note.service";
 
-export async function createNoteCommand(request: unknown) {
-  const session = await getAuthenticatedSessionServer();
-  if (!session?.account?.id) {
-    throw new Error("Unauthorized: No active session");
-  }
-
-  // リクエストのバリデーション
-  const validated = CreateNoteRequestSchema.parse(request);
-
-  const note = await noteService.createNote(session.account.id, validated);
-  return NoteResponseSchema.parse(note);
+export async function createNoteCommand(request: CreateNoteRequest) {
+  return withAuth(async ({ accountId }) => {
+    const validated = CreateNoteRequestSchema.parse(request);
+    const note = await noteService.createNote(accountId, validated);
+    return NoteResponseSchema.parse(note);
+  });
 }
 
-export async function updateNoteCommand(id: string, request: unknown) {
-  const session = await getAuthenticatedSessionServer();
-  if (!session?.account?.id) {
-    throw new Error("Unauthorized: No active session");
-  }
-
-  // リクエストのバリデーション
-  const validated = UpdateNoteRequestSchema.parse(request);
-
-  const note = await noteService.updateNote(id, session.account.id, validated);
-  return NoteResponseSchema.parse(note);
+export async function updateNoteCommand(request: UpdateNoteByIdRequest) {
+  return withAuth(async ({ accountId }) => {
+    const validated = UpdateNoteByIdRequestSchema.parse(request);
+    const { id, ...updateData } = validated;
+    const note = await noteService.updateNote(id, accountId, updateData);
+    return NoteResponseSchema.parse(note);
+  });
 }
 
-export async function publishNoteCommand(request: unknown) {
-  const session = await getAuthenticatedSessionServer();
-
-  // Validate request
-  const validated = PublishNoteRequestSchema.parse(request);
-
-  if (!session?.account?.id) {
-    throw new Error("Account not found");
-  }
-
-  const note = await noteService.publishNote(
-    validated.noteId,
-    session.account.id,
-  );
-  return NoteResponseSchema.parse(note);
+export async function publishNoteCommand(request: PublishNoteRequest) {
+  return withAuth(async ({ accountId }) => {
+    const validated = PublishNoteRequestSchema.parse(request);
+    const note = await noteService.publishNote(validated.noteId, accountId);
+    return NoteResponseSchema.parse(note);
+  });
 }
 
-export async function unpublishNoteCommand(request: unknown) {
-  const session = await getAuthenticatedSessionServer();
-
-  // Validate request
-  const validated = UnpublishNoteRequestSchema.parse(request);
-
-  if (!session?.account?.id) {
-    throw new Error("Account not found");
-  }
-
-  const note = await noteService.unpublishNote(
-    validated.noteId,
-    session.account.id,
-  );
-  return NoteResponseSchema.parse(note);
+export async function unpublishNoteCommand(request: UnpublishNoteRequest) {
+  return withAuth(async ({ accountId }) => {
+    const validated = UnpublishNoteRequestSchema.parse(request);
+    const note = await noteService.unpublishNote(validated.noteId, accountId);
+    return NoteResponseSchema.parse(note);
+  });
 }
 
-export async function deleteNoteCommand(id: string) {
-  const session = await getAuthenticatedSessionServer();
-
-  if (!session?.account?.id) {
-    throw new Error("Account not found");
-  }
-
-  await noteService.deleteNote(id, session.account.id);
-
-  return { success: true };
+export async function deleteNoteCommand(request: DeleteNoteRequest) {
+  return withAuth(async ({ accountId }) => {
+    const validated = DeleteNoteRequestSchema.parse(request);
+    await noteService.deleteNote(validated.id, accountId);
+    return { success: true };
+  });
 }

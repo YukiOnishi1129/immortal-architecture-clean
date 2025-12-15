@@ -1,19 +1,21 @@
 import "server-only";
 
+import { withAuth } from "@/features/auth/servers/auth.guard";
 import { getSessionServer } from "@/features/auth/servers/auth.server";
+import { requireAuthServer } from "@/features/auth/servers/redirect.server";
 import {
-  getAuthenticatedSessionServer,
-  requireAuthServer,
-} from "@/features/auth/servers/redirect.server";
-import type { TemplateFilters } from "@/features/template/types";
-import {
+  type GetTemplateByIdRequest,
+  GetTemplateByIdRequestSchema,
+  type ListTemplateRequest,
+  ListTemplateRequestSchema,
   TemplateDetailResponseSchema,
   TemplateResponseSchema,
 } from "../../dto/template.dto";
 import { templateService } from "../../service/template/template.service";
 
-export async function getTemplateByIdQuery(id: string) {
-  const template = await templateService.getTemplateById(id);
+export async function getTemplateByIdQuery(request: GetTemplateByIdRequest) {
+  const validated = GetTemplateByIdRequestSchema.parse(request);
+  const template = await templateService.getTemplateById(validated.id);
 
   if (!template) {
     return null;
@@ -22,7 +24,7 @@ export async function getTemplateByIdQuery(id: string) {
   return TemplateDetailResponseSchema.parse(template);
 }
 
-export async function listTemplatesQuery(filters?: TemplateFilters) {
+export async function listTemplatesQuery(request?: ListTemplateRequest) {
   await requireAuthServer();
 
   // Get current user for onlyMyTemplates filter
@@ -31,28 +33,27 @@ export async function listTemplatesQuery(filters?: TemplateFilters) {
     throw new Error("Unauthorized: No active session");
   }
 
+  const validated = request ? ListTemplateRequestSchema.parse(request) : {};
+
   const ownerFilter =
-    filters?.onlyMyTemplates && session?.account.id
+    validated?.onlyMyTemplates && session?.account.id
       ? session.account.id
-      : filters?.ownerId;
+      : validated?.ownerId;
 
   const templates = await templateService.getTemplates({
     ownerId: ownerFilter,
-    q: filters?.q,
+    q: validated?.q,
   });
 
   return templates.map((template) => TemplateResponseSchema.parse(template));
 }
 
 export async function listMyTemplatesQuery() {
-  const session = await getAuthenticatedSessionServer();
-  if (!session?.account?.id) {
-    throw new Error("Unauthorized: No active session");
-  }
+  return withAuth(async ({ accountId }) => {
+    const templates = await templateService.getTemplates({
+      ownerId: accountId,
+    });
 
-  const templates = await templateService.getTemplates({
-    ownerId: session.account.id,
+    return templates.map((template) => TemplateResponseSchema.parse(template));
   });
-
-  return templates.map((template) => TemplateResponseSchema.parse(template));
 }

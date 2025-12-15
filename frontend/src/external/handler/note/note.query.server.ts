@@ -1,16 +1,23 @@
 import "server-only";
+
+import { withAuth } from "@/features/auth/servers/auth.guard";
+import { requireAuthServer } from "@/features/auth/servers/redirect.server";
 import {
-  getAuthenticatedSessionServer,
-  requireAuthServer,
-} from "@/features/auth/servers/redirect.server";
-import type { NoteFilters } from "@/features/note/types";
-import { NoteResponseSchema } from "../../dto/note.dto";
+  type GetNoteByIdRequest,
+  GetNoteByIdRequestSchema,
+  type ListMyNoteRequest,
+  ListMyNoteRequestSchema,
+  type ListNoteRequest,
+  ListNoteRequestSchema,
+  NoteResponseSchema,
+} from "../../dto/note.dto";
 import { noteService } from "../../service/note/note.service";
 
-export async function getNoteByIdQuery(id: string) {
+export async function getNoteByIdQuery(request: GetNoteByIdRequest) {
   await requireAuthServer();
 
-  const note = await noteService.getNoteById(id);
+  const validated = GetNoteByIdRequestSchema.parse(request);
+  const note = await noteService.getNoteById(validated.id);
 
   if (!note) {
     return null;
@@ -19,23 +26,23 @@ export async function getNoteByIdQuery(id: string) {
   return NoteResponseSchema.parse(note);
 }
 
-export async function listNoteQuery(filters?: NoteFilters) {
+export async function listNoteQuery(request?: ListNoteRequest) {
   await requireAuthServer();
 
-  const notes = await noteService.getNotes(filters);
+  const validated = request ? ListNoteRequestSchema.parse(request) : undefined;
+  const notes = await noteService.getNotes(validated);
   return notes.map((note) => NoteResponseSchema.parse(note));
 }
 
-export async function listMyNoteQuery(filters?: NoteFilters) {
-  const session = await getAuthenticatedSessionServer();
-  if (!session?.account?.id) {
-    throw new Error("Unauthorized: No active session");
-  }
+export async function listMyNoteQuery(request?: ListMyNoteRequest) {
+  return withAuth(async ({ accountId }) => {
+    const validated = request ? ListMyNoteRequestSchema.parse(request) : {};
 
-  const notes = await noteService.getNotes({
-    ...filters,
-    ownerId: session.account.id,
+    const notes = await noteService.getNotes({
+      ...validated,
+      ownerId: accountId,
+    });
+
+    return notes.map((note) => NoteResponseSchema.parse(note));
   });
-
-  return notes.map((note) => NoteResponseSchema.parse(note));
 }
