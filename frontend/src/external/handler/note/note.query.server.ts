@@ -1,6 +1,5 @@
 import "server-only";
 
-import { withAuth } from "@/features/auth/servers/auth.guard";
 import { requireAuthServer } from "@/features/auth/servers/redirect.server";
 import {
   type GetNoteByIdRequest,
@@ -34,15 +33,17 @@ export async function listNoteQuery(request?: ListNoteRequest) {
   return notes.map((note) => NoteResponseSchema.parse(note));
 }
 
-export async function listMyNoteQuery(request?: ListMyNoteRequest) {
-  return withAuth(async ({ accountId }) => {
-    const validated = request ? ListMyNoteRequestSchema.parse(request) : {};
+// NOTE: 認証チェック（withAuth）は .action.ts で行う
+export async function listMyNoteQuery(
+  request: ListMyNoteRequest | undefined,
+  accountId: string,
+) {
+  const validated = request ? ListMyNoteRequestSchema.parse(request) : {};
 
-    const notes = await noteService.getNotes({
-      ...validated,
-      ownerId: accountId,
-    });
-
-    return notes.map((note) => NoteResponseSchema.parse(note));
+  const notes = await noteService.getNotes({
+    ...validated,
+    ownerId: accountId,
   });
+
+  return notes.map((note) => NoteResponseSchema.parse(note));
 }

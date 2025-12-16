@@ -4,6 +4,7 @@ import type {
   GetTemplateByIdRequest,
   ListTemplateRequest,
 } from "@/external/dto/template.dto";
+import { withAuth } from "@/features/auth/servers/auth.guard";
 import {
   getTemplateByIdQuery,
   listMyTemplatesQuery,
@@ -21,5 +22,5 @@ export async function listTemplatesQueryAction(request?: ListTemplateRequest) {
 }
 
 export async function listMyTemplatesQueryAction() {
-  return listMyTemplatesQuery();
+  return withAuth(({ accountId }) => listMyTemplatesQuery(accountId));
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { withAuth } from "@/features/auth/servers/auth.guard";
 import type {
   GetNoteByIdRequest,
   ListMyNoteRequest,
@@ -20,5 +21,5 @@ export async function listNoteQueryAction(request?: ListNoteRequest) {
 }
 
 export async function listMyNoteQueryAction(request?: ListMyNoteRequest) {
-  return listMyNoteQuery(request);
+  return withAuth(({ accountId }) => listMyNoteQuery(request, accountId));
 }

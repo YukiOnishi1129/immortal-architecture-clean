@@ -1,5 +1,6 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { listMyNoteQuery } from "@/external/handler/note/note.query.server";
+import { getAuthenticatedSessionServer } from "@/features/auth/servers/redirect.server";
 import { MyNoteList } from "@/features/note/components/client/MyNoteList";
 import { noteKeys } from "@/features/note/queries/keys";
 import type { NoteStatus } from "@/features/note/types";
@@ -14,6 +15,7 @@ type MyNoteListPageTemplateProps = {
 export async function MyNoteListPageTemplate(
   props: MyNoteListPageTemplateProps = {},
 ) {
+  const session = await getAuthenticatedSessionServer();
   const queryClient = getQueryClient();
 
   const filters = {
@@ -22,10 +24,9 @@ export async function MyNoteListPageTemplate(
     page: props.page,
   };
 
-  // ownerIdは認証情報から自動的に設定されるため、ここでは設定不要
   await queryClient.prefetchQuery({
     queryKey: noteKeys.myList(filters),
-    queryFn: () => listMyNoteQuery(filters),
+    queryFn: () => listMyNoteQuery(filters, session.account.id),
   });
 
   return (

@@ -1,6 +1,5 @@
 import "server-only";
 
-import { withAuth } from "@/features/auth/servers/auth.guard";
 import {
   type CreateTemplateRequest,
   CreateTemplateRequestSchema,
@@ -12,49 +11,53 @@ import {
 } from "../../dto/template.dto";
 import { templateService } from "../../service/template/template.service";
 
-export async function createTemplateCommand(request: CreateTemplateRequest) {
-  return withAuth(async ({ accountId }) => {
-    const validated = CreateTemplateRequestSchema.parse(request);
-    const template = await templateService.createTemplate(accountId, validated);
-    return TemplateResponseSchema.parse(template);
-  });
+// NOTE: 認証チェック（withAuth）は .action.ts で行う
+export async function createTemplateCommand(
+  request: CreateTemplateRequest,
+  accountId: string,
+) {
+  const validated = CreateTemplateRequestSchema.parse(request);
+  const template = await templateService.createTemplate(accountId, validated);
+  return TemplateResponseSchema.parse(template);
 }
 
+// NOTE: 認証チェック（withAuth）は .action.ts で行う
 export async function updateTemplateCommand(
   request: UpdateTemplateByIdRequest,
+  accountId: string,
 ) {
-  return withAuth(async ({ accountId }) => {
-    try {
-      const validated = UpdateTemplateByIdRequestSchema.parse(request);
-      const { id, ...updateData } = validated;
-      const template = await templateService.updateTemplate(
-        id,
-        accountId,
-        updateData,
-      );
-      return TemplateResponseSchema.parse(template);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === "TEMPLATE_FIELD_IN_USE") {
-          throw new Error(
-            "テンプレートの項目は変更・削除できません。ノートで使用されています。",
-          );
-        }
-        if (error.message === "TEMPLATE_STRUCTURE_LOCKED") {
-          throw new Error(
-            "テンプレートの項目は変更・削除できません。ノートで使用されています。",
-          );
-        }
+  try {
+    const validated = UpdateTemplateByIdRequestSchema.parse(request);
+    const { id, ...updateData } = validated;
+    const template = await templateService.updateTemplate(
+      id,
+      accountId,
+      updateData,
+    );
+    return TemplateResponseSchema.parse(template);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "TEMPLATE_FIELD_IN_USE") {
+        throw new Error(
+          "テンプレートの項目は変更・削除できません。ノートで使用されています。",
+        );
       }
-      throw error;
+      if (error.message === "TEMPLATE_STRUCTURE_LOCKED") {
+        throw new Error(
+          "テンプレートの項目は変更・削除できません。ノートで使用されています。",
+        );
+      }
     }
-  });
+    throw error;
+  }
 }
 
-export async function deleteTemplateCommand(request: DeleteTemplateRequest) {
-  return withAuth(async ({ accountId }) => {
-    const validated = DeleteTemplateRequestSchema.parse(request);
-    await templateService.deleteTemplate(validated.id, accountId);
-    return { success: true };
-  });
+// NOTE: 認証チェック（withAuth）は .action.ts で行う
+export async function deleteTemplateCommand(
+  request: DeleteTemplateRequest,
+  accountId: string,
+) {
+  const validated = DeleteTemplateRequestSchema.parse(request);
+  await templateService.deleteTemplate(validated.id, accountId);
+  return { success: true };
 }

@@ -1,6 +1,5 @@
 import "server-only";
 
-import { withAuth } from "@/features/auth/servers/auth.guard";
 import { getSessionServer } from "@/features/auth/servers/auth.server";
 import { requireAuthServer } from "@/features/auth/servers/redirect.server";
 import {
@@ -48,12 +47,11 @@ export async function listTemplatesQuery(request?: ListTemplateRequest) {
   return templates.map((template) => TemplateResponseSchema.parse(template));
 }
 
-export async function listMyTemplatesQuery() {
-  return withAuth(async ({ accountId }) => {
-    const templates = await templateService.getTemplates({
-      ownerId: accountId,
-    });
-
-    return templates.map((template) => TemplateResponseSchema.parse(template));
+// NOTE: 認証チェック（withAuth）は .action.ts で行う
+export async function listMyTemplatesQuery(accountId: string) {
+  const templates = await templateService.getTemplates({
+    ownerId: accountId,
   });
+
+  return templates.map((template) => TemplateResponseSchema.parse(template));
 }
