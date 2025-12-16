@@ -1,5 +1,6 @@
 "use server";
 
+import { withAuth } from "@/features/auth/servers/auth.guard";
 import type {
   CreateNoteRequest,
   DeleteNoteRequest,
@@ -16,23 +17,23 @@ import {
 } from "./note.command.server";
 
 export async function createNoteCommandAction(request: CreateNoteRequest) {
-  return createNoteCommand(request);
+  return withAuth(({ accountId }) => createNoteCommand(request, accountId));
 }
 
 export async function updateNoteCommandAction(request: UpdateNoteByIdRequest) {
-  return updateNoteCommand(request);
+  return withAuth(({ accountId }) => updateNoteCommand(request, accountId));
 }
 
 export async function publishNoteCommandAction(request: PublishNoteRequest) {
-  return publishNoteCommand(request);
+  return withAuth(({ accountId }) => publishNoteCommand(request, accountId));
 }
 
 export async function unpublishNoteCommandAction(
   request: UnpublishNoteRequest,
 ) {
-  return unpublishNoteCommand(request);
+  return withAuth(({ accountId }) => unpublishNoteCommand(request, accountId));
 }
 
 export async function deleteNoteCommandAction(request: DeleteNoteRequest) {
-  return deleteNoteCommand(request);
+  return withAuth(({ accountId }) => deleteNoteCommand(request, accountId));
 }

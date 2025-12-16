@@ -1,6 +1,5 @@
 import "server-only";
 
-import { withAuth } from "@/features/auth/servers/auth.guard";
 import {
   type CreateOrGetAccountRequest,
   CreateOrGetAccountRequestSchema,
@@ -19,18 +18,18 @@ export async function createOrGetAccountCommand(
   return accountService.createOrGet(validated);
 }
 
+// NOTE: 認証チェック（withAuth）は .action.ts で行う
 export async function updateAccountCommand(
   request: UpdateAccountByIdRequest,
+  accountId: string,
 ): Promise<UpdateAccountResponse> {
-  return withAuth(async ({ accountId }) => {
-    const validated = UpdateAccountByIdRequestSchema.parse(request);
+  const validated = UpdateAccountByIdRequestSchema.parse(request);
 
-    // Check if the user is updating their own account
-    if (accountId !== validated.id) {
-      throw new Error("Forbidden: Can only update your own account");
-    }
+  // Check if the user is updating their own account
+  if (accountId !== validated.id) {
+    throw new Error("Forbidden: Can only update your own account");
+  }
 
-    const { id, ...updateData } = validated;
-    return accountService.update(id, updateData);
-  });
+  const { id, ...updateData } = validated;
+  return accountService.update(id, updateData);
 }
